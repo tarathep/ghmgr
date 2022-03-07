@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/tarathep/githuby/login"
+	"github.com/tarathep/githuby/model"
 )
 
 type Team struct {
@@ -17,10 +18,11 @@ type Team struct {
 	Debug bool
 }
 
-func (team Team) GetRepos(owner string, teamName string, page string) Repos {
+func (team Team) GetRepos(owner string, teamName string, page string) model.Repos {
 	req, err := http.NewRequest("GET", "https://api.github.com/orgs/"+owner+"/teams/"+teamName+"/repos?page="+page, nil)
 	if err != nil {
 		// handle err
+		log.Fatal(err)
 	}
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 	//req.Header.Set("Authorization", "token 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")
@@ -29,6 +31,7 @@ func (team Team) GetRepos(owner string, teamName string, page string) Repos {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		// handle err
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 
@@ -36,13 +39,15 @@ func (team Team) GetRepos(owner string, teamName string, page string) Repos {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//bodyString := string(bodyBytes)
+	// bodyString := string(bodyBytes)
 
-	//fmt.Println(bodyString)
+	// fmt.Println(bodyString)
 
-	repos := Repos{}
+	repos := model.Repos{}
 
 	json.Unmarshal(bodyBytes, &repos)
+
+	// log.Print(repos)
 
 	return repos
 }
@@ -118,4 +123,35 @@ func (team Team) AddnewTeamInAnotherRepoTeam(owner string, teamNameAdd string, t
 		team.UpdateRepoPermissionTeam(permission, teamNameAdd, owner, repoName)
 	}
 	fmt.Println("Add Team : [ " + teamNameAdd + " ] to Repository team [" + teamNameIsMember + "] is member\nPermission is [ " + permission + " ]")
+}
+
+func (team Team) GetInfoTeam(owner string, teamName string) model.Team {
+	req, err := http.NewRequest("GET", "https://api.github.com/orgs/"+owner+"/teams/"+teamName, nil)
+	if err != nil {
+		// handle err
+		log.Fatal(err)
+	}
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("Authorization", "token "+team.Auth.Token)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if resp.StatusCode != 200 {
+		bodyString := string(bodyBytes)
+		log.Fatal(resp.Status, bodyString)
+	}
+
+	teamm := model.Team{}
+	json.Unmarshal(bodyBytes, &teamm)
+
+	return teamm
 }

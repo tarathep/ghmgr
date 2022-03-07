@@ -24,5 +24,5 @@ func (auth Auth) LoginWithToken() string {
 
 // Login with Token
 func (auth Auth) GetToken() string {
-	return "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"
+	return "ghp_6JL92oupGZThnb38UyJtlf8LO2Uw6j2OvnZy"
 }

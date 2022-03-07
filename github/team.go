@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"strconv"
 
 	"github.com/tarathep/githuby/login"
@@ -15,50 +13,32 @@ import (
 
 type Team struct {
 	Auth  login.Auth
-	Debug bool
+	Owner string
 }
 
-func (team Team) GetRepos(owner string, teamName string, page string) model.Repos {
-	req, err := http.NewRequest("GET", "https://api.github.com/orgs/"+owner+"/teams/"+teamName+"/repos?page="+page, nil)
-	if err != nil {
-		// handle err
-		log.Fatal(err)
-	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	//req.Header.Set("Authorization", "token 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")
-	req.Header.Set("Authorization", "token "+team.Auth.Token)
+func (team Team) GetRepos(teamName string, page string) model.Repos {
+	github := GitHub{Auth: team.Auth}
+	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/repos?page="+page, nil)
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// handle err
-		log.Fatal(err)
+	if statusCode != 200 {
+		log.Println(statusCode, github.GetMessage(bodyBytes))
 	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	// bodyString := string(bodyBytes)
-
-	// fmt.Println(bodyString)
 
 	repos := model.Repos{}
 
 	json.Unmarshal(bodyBytes, &repos)
 
-	// log.Print(repos)
-
 	return repos
 }
 
-func (team Team) GetRepoList(owner string, teamName string) []string {
+func (team Team) GetRepoList(teamName string) []string {
 	var nameRepos []string
 	total := 0
 
 	for i := 0; true; i++ {
-		page := strconv.Itoa((i + 1))
-		repos := team.GetRepos(owner, teamName, page)
+		pagex := strconv.Itoa((i + 1))
+
+		repos := team.GetRepos(teamName, pagex)
 
 		if len(repos) == 0 {
 			break
@@ -73,7 +53,7 @@ func (team Team) GetRepoList(owner string, teamName string) []string {
 	return nameRepos
 }
 
-func (team Team) UpdateRepoPermissionTeam(permission string, teamName string, owner string, repoName string) {
+func (team Team) UpdateRepoPermissionTeam(permission string, teamName string, repoName string) {
 
 	type Payload struct {
 		Permission string `json:"permission"`
@@ -85,69 +65,35 @@ func (team Team) UpdateRepoPermissionTeam(permission string, teamName string, ow
 
 	payloadBytes, err := json.Marshal(data)
 	if err != nil {
-		// handle err
+		log.Fatal(err)
 	}
 	body := bytes.NewReader(payloadBytes)
 
-	req, err := http.NewRequest("PUT", "https://api.github.com/orgs/corp-ais/teams/"+teamName+"/repos/"+owner+"/"+repoName, body)
-	if err != nil {
-		// handle err
-	}
-	req.Header.Set("Authorization", "token "+team.Auth.Token)
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	github := GitHub{Auth: team.Auth}
+	statusCode, bodyBytes := github.Request("PUT", "https://api.github.com/orgs/corp-ais/teams/"+teamName+"/repos/"+team.Owner+"/"+repoName, body)
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		// handle err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 204 {
+	if statusCode == 204 {
 		fmt.Println("SUCCESS : Add/Update PERMISSION [ " + permission + " ] TEAM  [ " + teamName + " ] to REPO NAME [ " + repoName + " ]")
 	} else {
 		fmt.Println("ERROR : update PERMISSION [ " + permission + " ] TEAM  [ " + teamName + " ] REPO NAME [ " + repoName + " ]")
-
-		bodyBytes, err := io.ReadAll(resp.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
-		bodyString := string(bodyBytes)
-		fmt.Println(bodyString)
+		log.Println(statusCode, github.GetMessage(bodyBytes))
 	}
 }
 
-func (team Team) AddnewTeamInAnotherRepoTeam(owner string, teamNameAdd string, teamNameIsMember string, permission string) {
-	for _, repoName := range team.GetRepoList(owner, teamNameIsMember) {
+func (team Team) AddnewTeamInAnotherRepoTeam(teamNameAdd string, teamNameIsMember string, permission string) {
+	for _, repoName := range team.GetRepoList(teamNameIsMember) {
 		fmt.Println(repoName)
-		team.UpdateRepoPermissionTeam(permission, teamNameAdd, owner, repoName)
+		team.UpdateRepoPermissionTeam(permission, teamNameAdd, repoName)
 	}
 	fmt.Println("Add Team : [ " + teamNameAdd + " ] to Repository team [" + teamNameIsMember + "] is member\nPermission is [ " + permission + " ]")
 }
 
-func (team Team) GetInfoTeam(owner string, teamName string) model.Team {
-	req, err := http.NewRequest("GET", "https://api.github.com/orgs/"+owner+"/teams/"+teamName, nil)
-	if err != nil {
-		// handle err
-		log.Fatal(err)
-	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("Authorization", "token "+team.Auth.Token)
+func (team Team) GetInfoTeam(teamName string) model.Team {
+	github := GitHub{Auth: team.Auth}
+	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName, nil)
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if resp.StatusCode != 200 {
-		bodyString := string(bodyBytes)
-		log.Fatal(resp.Status, bodyString)
+	if statusCode != 200 {
+		log.Println(statusCode, github.GetMessage(bodyBytes))
 	}
 
 	teamm := model.Team{}

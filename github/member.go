@@ -4,16 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 
 	"github.com/tarathep/githuby/login"
+	"github.com/tarathep/githuby/model"
 )
 
 type Member struct {
 	Auth  login.Auth
-	Debug bool
 	Owner string
 }
 
@@ -38,32 +36,37 @@ func (member Member) InviteToCorpTeam(Email string, Role string, teamID int) {
 	}
 	body := bytes.NewReader(payloadBytes)
 
-	req, err := http.NewRequest("POST", "https://api.github.com/orgs/"+member.Owner+"/invitations", body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	req.Header.Set("Accept", "application/vnd.github.v3+json")
-	req.Header.Set("Authorization", "token "+member.Auth.Token)
+	github := GitHub{Auth: member.Auth}
+	statusCode, bodyBytes := github.Request("POST", "https://api.github.com/orgs/"+member.Owner+"/invitations", body)
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-
-	bodyBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
+	if statusCode != 200 && statusCode != 201 {
+		log.Println(statusCode, github.GetMessage(bodyBytes))
+		return
 	}
 
-	if resp.StatusCode != 200 && resp.StatusCode != 201 {
-		bodyString := string(bodyBytes)
-		log.Fatal(resp.Status, bodyString)
+	fmt.Print(github.GetMessage(bodyBytes))
+
+	teamm := model.Team{}
+	json.Unmarshal(bodyBytes, &teamm)
+
+	fmt.Println(teamm)
+}
+
+// InvitedToCorpTeamPending : https://docs.github.com/en/rest/reference/teams#list-pending-team-invitations
+func (member Member) InvitedToCorpTeamPending(teamName string) {
+
+	github := GitHub{Auth: member.Auth}
+	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/teams/"+teamName+"/invitations", nil)
+
+	if statusCode != 200 {
+		log.Println(statusCode, github.GetMessage(bodyBytes))
+		return
 	}
 
-	bodyString := string(bodyBytes)
-	fmt.Print(bodyString)
+	invitations := model.InvitationList{}
+	json.Unmarshal(bodyBytes, &invitations)
 
-	// teamm := model.Team{}
-	// json.Unmarshal(bodyBytes, &teamm)
+	for i, invitation := range invitations {
+		fmt.Println(i, invitation.ID, invitation.Email)
+	}
 }

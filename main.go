@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/tarathep/githuby/github"
 	"github.com/tarathep/githuby/login"
 	"github.com/tarathep/githuby/model"
 )
@@ -15,7 +16,7 @@ func main() {
 	auth.Token = auth.GetToken()
 
 	// team := github.Team{Auth: auth, Owner: "corp-ais"}
-	// teamID := team.GetInfoTeam("ccsm").ID
+	// teamID := team.GetInfoTeam("ipfm").ID
 	// fmt.Print(teamID)
 
 	// team.GetRepoList("myChannel")
@@ -24,9 +25,15 @@ func main() {
 	// team.AddnewTeamInAnotherRepoTeam("corp-ais", "IBM", "myChannel", "admin")
 	// role string, teamName string, owner string, repoName string
 
-	// member := github.Member{Auth: auth, Debug: true, Owner: "corp-ais"}
+	member := github.Member{Auth: auth, Owner: "corp-ais"}
 	// member.InviteToCorpTeam("bokie.demo@gmail.com", "direct_member", teamID)
 
+	// member.InviteToCorpTeam("bokie.demo@gmail.com", "direct_member", teamID)
+	member.InvitedToCorpTeamPending("ipfm")
+
+}
+
+func csvFile() {
 	records, err := readData("mc.csv")
 
 	if err != nil {

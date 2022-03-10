@@ -1,2 +1,2 @@
-# githuby
-management GitHub APIs tools
+# GitHub Manager (ghmgr)
+Management GitHub APIs tools

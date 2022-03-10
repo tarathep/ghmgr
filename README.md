@@ -2,6 +2,36 @@
 Support GitHub Enterprise/Organize management GitHub APIs tools 
 
 
+## Installation
+
+Download bin file and set env path (depending on OS)
+
+
+
+## Login
+
+### Login GitHub Personal Token
+
+on Windows with CMD
+
+```cmd
+set GHP_TOKEN=php_xxxxxxxxxxxxxxxxxx
+```
+
+on Unix or MacOS
+
+```bash
+export GHP_TOKEN=ghp_xxxxxxxxxxxxxxxxxx
+```
+
+or 
+
+```bash
+ghmgr login --token ghp_xxxxxxxxxxxxxxxxxx
+```
+
+
+
 ## List
 
 ### List member in team

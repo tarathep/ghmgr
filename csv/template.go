@@ -74,7 +74,7 @@ func (Template) WriteCSV(teamName string, dataset []model.CSV) bool {
 
 	var data = [][]string{
 		{"TeamName/Project", teamName},
-		{"ID (รหัสพนักงาน)", "MemberName", "Email", "Role", "GitHub Team Role", "UserName(GitHub)"},
+		{"ID (Employee)", "MemberName", "Email", "Role", "GitHub Team Role", "UserName(GitHub)"},
 	}
 
 	//prepare dataset

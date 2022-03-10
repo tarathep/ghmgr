@@ -40,9 +40,17 @@ func (mgr GitHubManager) ReadCSVFile(fileName string) {
 
 func (mgr GitHubManager) InviteMemberToCorpTeam(teamName string, role string, email string) {
 	// HARDCODE  ROLE!!
-	role = "direct_member"
+	if role == "member" {
+		role = "direct_member"
+	} else if role == "maintainer" {
+		role = "maintainer"
+	}
+
 	teamID := mgr.Team.GetInfoTeam(teamName).ID
-	mgr.Member.InviteToCorpTeam(email, role, teamID)
+	if err := mgr.Member.InviteToCorpTeam(email, role, teamID); err != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println("Invite Member Successful")
 }
 
 func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
@@ -59,11 +67,13 @@ func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 }
 
 func (mgr GitHubManager) ShowListTeamMemberPending(teamName string) {
-	fmt.Println("List Team Member of " + teamName)
+	fmt.Println("List Team Member of " + teamName + "\n------------------------------------------------")
+
 	for i, invitation := range mgr.Member.ListPendingTeamInvitations(teamName) {
-		println(i+1, "ID:", invitation.ID, "User:", invitation.Login, "Email:", invitation.Email)
+		println(i+1, "ID:", invitation.ID, "Email:", invitation.Email)
 	}
 }
+
 func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
 	var dataset []model.CSV
 

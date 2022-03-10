@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type InvitationList []struct {
+type Invitation struct {
 	ID           int         `json:"id"`
 	NodeID       string      `json:"node_id"`
 	Login        interface{} `json:"login"`

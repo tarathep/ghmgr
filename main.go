@@ -20,6 +20,7 @@ type Options struct {
 	Role    string `short:"r" long:"role" description:"Role"`
 	Version bool   `short:"v" long:"version" description:"Version"`
 	Token   string `long:"token" description:"Personal Access Token"`
+	ORG     bool   `short:"o" long:"org" description:"ORG"`
 }
 
 func main() {
@@ -29,16 +30,8 @@ func main() {
 
 	// team.GetRepoList("myChannel")
 
-	//team.UpdateRepoPermissionTeam("admin", "myChannel", "corp-ais", "demo-pipeline")
 	// team.AddnewTeamInAnotherRepoTeam("corp-ais", "IBM", "myChannel", "admin")
 	// role string, teamName string, owner string, repoName string
-
-	// member.InviteToCorpTeam("bokie.demo@gmail.com", "direct_member", teamID)
-	// member.ListPendingTeamInvitations("ipfm")
-
-	// for i, teamMember := range team.ListTeamMember("enterprise-solution-development") {
-	// 	println(i, teamMember.Login)
-	// }
 
 	//--- Options Flags ---
 	var options Options
@@ -79,6 +72,9 @@ func main() {
 					if options.File != "" {
 						gitHubMgr.ReadCSVFile(options.File)
 					}
+					if options.ORG {
+						gitHubMgr.Member.ListMember()
+					}
 				}
 			}
 		case "export":
@@ -108,7 +104,7 @@ func main() {
 					auth.SetToken(options.Token)
 				}
 			}
-
+		case "":
 		}
 	}
 }

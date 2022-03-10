@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/tarathep/githuby/login"
-	"github.com/tarathep/githuby/model"
+	"github.com/tarathep/ghmgr/login"
+	"github.com/tarathep/ghmgr/model"
 )
 
 type Member struct {
@@ -44,23 +44,25 @@ func (member Member) InviteToCorpTeam(Email string, Role string, teamID int) {
 		return
 	}
 
-	fmt.Print(github.GetMessage(bodyBytes))
+	fmt.Println("Invitation Success", Email, Role)
 
-	teamm := model.Team{}
-	json.Unmarshal(bodyBytes, &teamm)
+	// fmt.Print(github.GetMessage(bodyBytes))
 
-	fmt.Println(teamm)
+	// teamm := model.Team{}
+	// json.Unmarshal(bodyBytes, &teamm)
+
+	// fmt.Println(teamm)
 }
 
 // InvitedToCorpTeamPending : https://docs.github.com/en/rest/reference/teams#list-pending-team-invitations
-func (member Member) InvitedToCorpTeamPending(teamName string) {
+func (member Member) ListPendingTeamInvitations(teamName string) model.InvitationList {
 
 	github := GitHub{Auth: member.Auth}
 	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/teams/"+teamName+"/invitations", nil)
 
 	if statusCode != 200 {
 		log.Println(statusCode, github.GetMessage(bodyBytes))
-		return
+		return nil
 	}
 
 	invitations := model.InvitationList{}
@@ -69,4 +71,5 @@ func (member Member) InvitedToCorpTeamPending(teamName string) {
 	for i, invitation := range invitations {
 		fmt.Println(i, invitation.ID, invitation.Email)
 	}
+	return invitations
 }

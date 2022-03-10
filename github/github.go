@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/tarathep/githuby/login"
+	"github.com/tarathep/ghmgr/login"
 )
 
 type GitHub struct {

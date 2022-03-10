@@ -7,8 +7,8 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/tarathep/githuby/login"
-	"github.com/tarathep/githuby/model"
+	"github.com/tarathep/ghmgr/login"
+	"github.com/tarathep/ghmgr/model"
 )
 
 type Team struct {
@@ -100,4 +100,39 @@ func (team Team) GetInfoTeam(teamName string) model.Team {
 	json.Unmarshal(bodyBytes, &teamm)
 
 	return teamm
+}
+
+// ListTeamMemberPerPage  see more : https://docs.github.com/en/rest/reference/teams#list-team-members
+func (team Team) ListTeamMemberPerPage(teamName, page, role string) []model.TeamMember {
+	github := GitHub{Auth: team.Auth}
+	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
+
+	if statusCode != 200 {
+		log.Println(statusCode, github.GetMessage(bodyBytes))
+	}
+
+	list_team_member := []model.TeamMember{}
+	json.Unmarshal(bodyBytes, &list_team_member)
+
+	return list_team_member
+}
+
+// ListTeamMember  see more : https://docs.github.com/en/rest/reference/teams#list-team-members
+func (team Team) ListTeamMember(teamName string, role string) []model.TeamMember {
+	var listTeamMember []model.TeamMember
+
+	for i := 0; true; i++ {
+		page := strconv.Itoa((i + 1))
+
+		list_team_member_perpage := team.ListTeamMemberPerPage(teamName, page, role)
+
+		if len(list_team_member_perpage) == 0 {
+			break
+		}
+
+		for _, team_member := range list_team_member_perpage {
+			listTeamMember = append(listTeamMember, team_member)
+		}
+	}
+	return listTeamMember
 }

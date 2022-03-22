@@ -136,3 +136,29 @@ func (team Team) ListTeamMember(teamName string, role string) []model.TeamMember
 	}
 	return listTeamMember
 }
+
+func RemoveIndex(s []model.TeamMember, index int) []model.TeamMember {
+	return append(s[:index], s[index+1:]...)
+}
+
+// Optional Exclude IBM Team
+func (team Team) ListTeamMemberExcludeTeam(teamName string, teamExcude string, role string) []model.TeamMember {
+	var listTeamMember []model.TeamMember
+	excludeTeamMember := team.ListTeamMember(teamExcude, "all")
+
+	for _, team_member := range team.ListTeamMember(teamName, role) {
+		if !isExist(team_member.Login, excludeTeamMember) {
+			listTeamMember = append(listTeamMember, team_member)
+		}
+	}
+	return listTeamMember
+}
+
+func isExist(team_member_login string, excludeTeamMember []model.TeamMember) bool {
+	for _, exteam := range excludeTeamMember {
+		if exteam.Login == team_member_login {
+			return true
+		}
+	}
+	return false
+}

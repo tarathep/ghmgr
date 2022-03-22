@@ -23,7 +23,6 @@ func (Template) ReadFile(filename string) (project string, csvlist []model.CSV) 
 		switch i {
 		case 0:
 			project = record[1]
-			// fmt.Println("TeamName/Project :>", record[1])
 		case 1:
 		default:
 			csv := model.CSV{
@@ -34,8 +33,10 @@ func (Template) ReadFile(filename string) (project string, csvlist []model.CSV) 
 				GitHubTeamRole: record[4],
 				GitHubUser:     record[5]}
 
-			//fmt.Println((i - 1), csv.Email)
-			csvlist = append(csvlist, csv)
+			//COMMANT SKIPLINE
+			if csv.ID != "#" {
+				csvlist = append(csvlist, csv)
+			}
 		}
 	}
 	return project, csvlist

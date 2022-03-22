@@ -12,15 +12,18 @@ import (
 )
 
 type Options struct {
-	Name    string `short:"n" long:"name" description:"a name"`
-	Email   string `short:"m" long:"email" description:"Email"`
-	File    string `short:"f" long:"file" description:"File"`
-	Team    string `short:"t" long:"team" description:"Team"`
-	Pending bool   `short:"p" long:"pending" description:"Pending"`
-	Role    string `short:"r" long:"role" description:"Role"`
-	Version bool   `short:"v" long:"version" description:"Version"`
-	Token   string `long:"token" description:"Personal Access Token"`
-	ORG     bool   `short:"o" long:"org" description:"ORG"`
+	Name     string `short:"n" long:"name" description:"a name"`
+	Email    string `short:"m" long:"email" description:"Email"`
+	Username string `short:"u" long:"username" description:"Username GitHub"`
+	File     string `short:"f" long:"file" description:"File"`
+	Team     string `short:"t" long:"team" description:"Team"`
+	Pending  bool   `short:"p" long:"pending" description:"Pending"`
+	Cancel   bool   `short:"c" long:"cancel" description:"Cancel"`
+	Role     string `short:"r" long:"role" description:"Role"`
+	Version  bool   `short:"v" long:"version" description:"Version"`
+	Token    string `long:"token" description:"Personal Access Token"`
+	ORG      bool   `short:"o" long:"org" description:"ORG"`
+	Exclude  string `short:"e" long:"exclude" description:"Excude Team"`
 }
 
 func main() {
@@ -53,7 +56,9 @@ func main() {
 
 		team := github.Team{Auth: auth, Owner: "corp-ais"}
 		member := github.Member{Auth: auth, Owner: "corp-ais"}
-		gitHubMgr := manage.GitHubManager{Member: member, Team: team}
+		user := github.User{Auth: auth}
+
+		gitHubMgr := manage.GitHubManager{Member: member, Team: team, User: user}
 
 		switch os.Args[1] {
 
@@ -61,12 +66,26 @@ func main() {
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 
-					if options.Team != "" && options.Pending {
-						gitHubMgr.ShowListTeamMemberPending(options.Team)
-					} else if options.Team != "" && options.Role != "" {
-						gitHubMgr.ShowListTeamMember(options.Team, options.Role)
+					if options.Team != "" && options.Exclude != "" {
+						if options.Pending {
+							gitHubMgr.ShowListTeamMemberPending(options.Team)
+						} else if options.Role != "" {
+							gitHubMgr.ShowListTeamMemberExclude(options.Team, options.Exclude, options.Role, options.Email)
+						} else if options.Email == "show" {
+							gitHubMgr.ShowListTeamMemberExclude(options.Team, options.Exclude, "all", options.Email)
+						} else {
+							gitHubMgr.ShowListTeamMemberExclude(options.Team, options.Exclude, "all", options.Email)
+						}
 					} else if options.Team != "" {
-						gitHubMgr.ShowListTeamMember(options.Team, "all")
+						if options.Pending {
+							gitHubMgr.ShowListTeamMemberPending(options.Team)
+						} else if options.Role != "" {
+							gitHubMgr.ShowListTeamMember(options.Team, options.Role, options.Email)
+						} else if options.Email == "show" {
+							gitHubMgr.ShowListTeamMember(options.Team, "all", options.Email)
+						} else {
+							gitHubMgr.ShowListTeamMember(options.Team, "all", options.Email)
+						}
 					}
 
 					if options.File != "" {
@@ -80,7 +99,9 @@ func main() {
 		case "export":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
-					if options.Team != "" {
+					if options.Team != "" && options.Exclude != "" {
+						gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
+					} else if options.Team != "" {
 						gitHubMgr.ExportCSVMemberTeam(options.Team)
 					}
 				}
@@ -89,13 +110,18 @@ func main() {
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Team != "" && options.Email != "" && options.Role != "" {
-						// fmt.Print("InviteMemberToCorpTeam")
 						gitHubMgr.InviteMemberToCorpTeam(options.Team, options.Role, options.Email)
 					}
+					if options.Team != "" && options.Username != "" && options.Role != "" {
+						gitHubMgr.InviteMemberToCorpTeamUsername(options.Team, options.Role, options.Username)
+					}
 					if options.File != "" {
-						// fmt.Print("InviteMemberToCorpTeamCSV")
 						gitHubMgr.InviteMemberToCorpTeamCSV(options.File)
 					}
+					if options.Cancel && options.Username != "" {
+						gitHubMgr.CancelOrganizationInvitation(options.Username)
+					}
+
 				}
 			}
 		case "login":
@@ -104,7 +130,14 @@ func main() {
 					auth.SetToken(options.Token)
 				}
 			}
-		case "":
+		case "check":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "member" {
+					if options.Username != "" {
+						gitHubMgr.CheckOrganizationMembership(options.Username)
+					}
+				}
+			}
 		}
 	}
 }

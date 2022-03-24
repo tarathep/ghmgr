@@ -124,6 +124,15 @@ func main() {
 
 				}
 			}
+		case "remove":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "member" {
+					if options.Username != "" {
+						gitHubMgr.RemoveOrganizationMember(options.Username)
+					}
+
+				}
+			}
 		case "login":
 			{
 				if options.Token != "" {

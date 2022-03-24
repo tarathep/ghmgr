@@ -62,6 +62,7 @@ func (member Member) RemoveOrganizationMember(username string) error {
 	return errors.New(github.GetMessage(bodyBytes))
 }
 
+//https://docs.github.com/en/rest/reference/orgs#cancel-an-organization-invitation
 func (member Member) CancelOrganizationInvitation(username string) error {
 	// username to user id
 	err, usr := User{member.Auth}.UserInfo(username)

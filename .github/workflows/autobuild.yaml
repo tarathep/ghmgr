@@ -1,0 +1,41 @@
+name: Build Artifact
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set env
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+
+    - name: Setup GO
+      uses: actions/setup-go@v2
+      with:
+        go-version: '1.17.7'
+    - run: go run main.go list member -t cdc-app
+
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    # - name: Copy Webapp Configuration
+    #   run: cp ${{ github.workspace }}/web.config ${{ github.workspace }}/bin/Release/netcoreapp3.1/
+
+    # - name: Packing Arifact Files
+    #   run: |
+    #     cd ${{ github.workspace }}/bin/Release/netcoreapp3.1/
+    #     tar -zcvf artifact-imgstorweb-${{ env.RELEASE_VERSION }}.tar.gz *
+
+    # - name: Upload Artifact Release
+    #   uses: softprops/action-gh-release@v1
+    #   with:
+    #     files: ${{ github.workspace }}/bin/Release/netcoreapp3.1/artifact-imgstorweb-${{ env.RELEASE_VERSION }}.tar.gz

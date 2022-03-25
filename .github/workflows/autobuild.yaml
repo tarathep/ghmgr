@@ -39,4 +39,4 @@ jobs:
     - name: Upload Artifact Release
       uses: softprops/action-gh-release@v1
       with:
-        files: ${{ github.workspace }}/bin/ghmgr-${{ env.RELEASE_VERSION }}-win-amd64.tar.gz
+        files: ${{ github.workspace }}/ghmgr-${{ env.RELEASE_VERSION }}-win-amd64.tar.gz

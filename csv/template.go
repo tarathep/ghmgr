@@ -11,12 +11,13 @@ import (
 
 type Template struct{}
 
-func (Template) ReadFile(filename string) (project string, csvlist []model.CSV) {
+func (Template) ReadFile(filename string) (err error, project string, csvlist []model.CSV) {
 
 	records, err := readData(filename)
 
 	if err != nil {
 		log.Fatal(err)
+		return err, "", nil
 	}
 
 	for i, record := range records {
@@ -39,7 +40,7 @@ func (Template) ReadFile(filename string) (project string, csvlist []model.CSV) 
 			}
 		}
 	}
-	return project, csvlist
+	return nil, project, csvlist
 }
 
 func readData(fileName string) ([][]string, error) {

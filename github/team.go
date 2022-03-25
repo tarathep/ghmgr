@@ -3,6 +3,7 @@ package github
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -16,9 +17,9 @@ type Team struct {
 	Owner string
 }
 
-func (team Team) GetRepos(teamName string, page string) model.Repos {
+func (team Team) GetRepos(teamName string, page string) (error, model.Repos) {
 	github := GitHub{Auth: team.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/repos?page="+page, nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/repos?page="+page, nil)
 
 	if statusCode != 200 {
 		log.Println(statusCode, github.GetMessage(bodyBytes))
@@ -28,7 +29,7 @@ func (team Team) GetRepos(teamName string, page string) model.Repos {
 
 	json.Unmarshal(bodyBytes, &repos)
 
-	return repos
+	return nil, repos
 }
 
 func (team Team) GetRepoList(teamName string) []string {
@@ -38,7 +39,7 @@ func (team Team) GetRepoList(teamName string) []string {
 	for i := 0; true; i++ {
 		pagex := strconv.Itoa((i + 1))
 
-		repos := team.GetRepos(teamName, pagex)
+		_, repos := team.GetRepos(teamName, pagex)
 
 		if len(repos) == 0 {
 			break
@@ -70,7 +71,7 @@ func (team Team) UpdateRepoPermissionTeam(permission string, teamName string, re
 	body := bytes.NewReader(payloadBytes)
 
 	github := GitHub{Auth: team.Auth}
-	statusCode, bodyBytes := github.Request("PUT", "https://api.github.com/orgs/corp-ais/teams/"+teamName+"/repos/"+team.Owner+"/"+repoName, body)
+	_, statusCode, bodyBytes := github.Request("PUT", "https://api.github.com/orgs/corp-ais/teams/"+teamName+"/repos/"+team.Owner+"/"+repoName, body)
 
 	if statusCode == 204 {
 		fmt.Println("SUCCESS : Add/Update PERMISSION [ " + permission + " ] TEAM  [ " + teamName + " ] to REPO NAME [ " + repoName + " ]")
@@ -90,7 +91,7 @@ func (team Team) AddnewTeamInAnotherRepoTeam(teamNameAdd string, teamNameIsMembe
 
 func (team Team) GetInfoTeam(teamName string) model.Team {
 	github := GitHub{Auth: team.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName, nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName, nil)
 
 	if statusCode != 200 {
 		log.Println(statusCode, github.GetMessage(bodyBytes))
@@ -105,7 +106,7 @@ func (team Team) GetInfoTeam(teamName string) model.Team {
 // ListTeamMemberPerPage  see more : https://docs.github.com/en/rest/reference/teams#list-team-members
 func (team Team) ListTeamMemberPerPage(teamName, page, role string) []model.TeamMember {
 	github := GitHub{Auth: team.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
 
 	if statusCode != 200 {
 		log.Println(statusCode, github.GetMessage(bodyBytes))
@@ -161,4 +162,18 @@ func isExist(team_member_login string, excludeTeamMember []model.TeamMember) boo
 		}
 	}
 	return false
+}
+
+// https://docs.github.com/en/rest/reference/teams#remove-team-membership-for-a-user
+func (team Team) RemoveTeamMembershipForUser(teamname, username string) error {
+	github := GitHub{Auth: team.Auth}
+	err, statusCode, bodyBytes := github.Request("DELETE", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamname+"/memberships/"+username, nil)
+
+	if err != nil {
+		return err
+	}
+	if statusCode != 204 {
+		return errors.New(github.GetMessage(bodyBytes))
+	}
+	return nil
 }

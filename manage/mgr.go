@@ -72,7 +72,11 @@ func (mgr GitHubManager) ReadCSVFile(fileName string) {
 
 	templ := csv.Template{}
 
-	proj, csvTemplate := templ.ReadFile(fileName)
+	err, proj, csvTemplate := templ.ReadFile(fileName)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
 
 	color.New(color.Italic).Print("CSV File Reader.\nTo list members in a  CSV file , [" + proj + "] team, the team must be visible to the GitHub.\n")
 
@@ -84,29 +88,37 @@ func (mgr GitHubManager) ReadCSVFile(fileName string) {
 	}
 }
 
-func (mgr GitHubManager) InviteMemberToCorpTeam(teamName string, role string, email string) {
-
-	if role == "member" || role == "Member" {
-		role = "direct_member"
-	} else if role == "maintainer" || role == "Maintainer" {
-		role = "maintainer"
-	}
-
-	teamID := mgr.Team.GetInfoTeam(teamName).ID
-	if err := mgr.Member.InviteToCorpTeam(email, role, teamID); err != nil {
-		log.Fatal(err.Error())
-	} else {
-		fmt.Print("Invite Successful")
-	}
+func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, role string, email string) {
+	color.New(color.Italic).Print("Create an organization invitation assign to [" + teamName + "] team. \n")
+	mgr.InviteMemberToCorpTeam(teamName, role, email)
 }
 
+func (mgr GitHubManager) InviteMemberToCorpTeam(teamName string, role string, email string) {
+	fmt.Printf(" %40s\t%20s : ", email, teamName)
+
+	//  UNCOMMENT to INVITE !!!!
+
+	// fmt.Printf("%3d\t%10d\t%40s\n", i+1, invitation.ID, invitation.Email)
+
+	// teamID := mgr.Team.GetInfoTeam(teamName).ID
+
+	// if err := mgr.Member.InviteToCorpTeam(email, role, teamID); err != nil {
+	// 	color.New(color.FgHiRed).Println("Error ", err.Error())
+	// 	os.Exit(1)
+	// } else {
+
+	// }
+	color.New(color.FgHiGreen).Println("Done")
+}
+
+//  xxx reflactor waiting
 func (mgr GitHubManager) InviteMemberToCorpTeamUsername(teamName string, role string, username string) {
 
-	if role == "member" || role == "Member" {
-		role = "direct_member"
-	} else if role == "maintainer" || role == "Maintainer" {
-		role = "maintainer"
-	}
+	// if role == "member" || role == "Member" {
+	// 	role = "direct_member"
+	// } else if role == "maintainer" || role == "Maintainer" {
+	// 	role = "maintainer"
+	// }
 
 	teamID := mgr.Team.GetInfoTeam(teamName).ID
 	if err := mgr.Member.InviteToCorpTeamUserName(username, role, teamID); err != nil {
@@ -120,22 +132,35 @@ func (mgr GitHubManager) InviteMemberToCorpTeamUsername(teamName string, role st
 
 func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 
+	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
+
 	templ := csv.Template{}
 
-	proj, csvTemplate := templ.ReadFile(fileName)
+	err, proj, csvTemplate := templ.ReadFile(fileName)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
 
 	for i, csvTempl := range csvTemplate {
-		fmt.Println((i + 1), proj, csvTempl.Email)
-
+		fmt.Print((i + 1), "\t")
 		mgr.InviteMemberToCorpTeam(proj, "direct_member", csvTempl.Email)
 	}
 }
 
 func (mgr GitHubManager) ShowListTeamMemberPending(teamName string) {
-	fmt.Println("List Team Member of " + teamName + "\n------------------------------------------------")
+	color.New(color.Italic).Print("List pending [" + teamName + "] team invitations\n")
 
-	for i, invitation := range mgr.Member.ListPendingTeamInvitations(teamName) {
-		println(i+1, "ID:", invitation.ID, "Email:", invitation.Email)
+	err, pendings := mgr.Member.ListPendingTeamInvitations(teamName)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%40s\n", "No.", "ID", "Email")
+
+	for i, invitation := range pendings {
+		fmt.Printf("%3d\t%10d\t%40s\n", i+1, invitation.ID, invitation.Email)
 	}
 }
 
@@ -201,5 +226,11 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 
 	}
 	color.New(color.FgHiRed).Print(username, " was removed an organization")
+}
+
+func (mgr GitHubManager) RemoveTeamMembershipForUser(teamname, username string) {
+	color.New(color.Italic).Print("To remove a membership between a user and a team, the authenticated user must have 'admin' permissions to the team or be an owner of the organization that the team is associated with. Removing team membership does not delete the user, it just removes their membership from the team.\n")
+	color.New(color.FgHiRed).Print(username, " removing a "+teamname+" team :")
+	color.New(color.FgHiGreen).Println(" Done")
 
 }

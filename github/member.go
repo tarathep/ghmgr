@@ -40,7 +40,7 @@ func (member Member) InviteToCorpTeamUserName(username string, role string, team
 // https://docs.github.com/en/rest/reference/orgs#check-organization-membership-for-a-user
 func (member Member) CheckOrganizationMembership(username string) (error, string) {
 	github := GitHub{Auth: member.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/members/"+username, nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/members/"+username, nil)
 
 	if statusCode == 204 {
 		return nil, "204"
@@ -54,7 +54,7 @@ func (member Member) CheckOrganizationMembership(username string) (error, string
 // https://docs.github.com/en/rest/reference/orgs#remove-an-organization-member
 func (member Member) RemoveOrganizationMember(username string) error {
 	github := GitHub{Auth: member.Auth}
-	statusCode, bodyBytes := github.Request("DELETE", "https://api.github.com/orgs/"+member.Owner+"/members/"+username, nil)
+	_, statusCode, bodyBytes := github.Request("DELETE", "https://api.github.com/orgs/"+member.Owner+"/members/"+username, nil)
 
 	if statusCode == 204 {
 		return nil
@@ -71,10 +71,9 @@ func (member Member) CancelOrganizationInvitation(username string) error {
 	}
 
 	github := GitHub{Auth: member.Auth}
-	statusCode, bodyBytes := github.Request("DELETE", "https://api.github.com/orgs/"+member.Owner+"/invitations/"+strconv.Itoa(usr.ID), nil)
+	_, statusCode, bodyBytes := github.Request("DELETE", "https://api.github.com/orgs/"+member.Owner+"/invitations/"+strconv.Itoa(usr.ID), nil)
 
 	if statusCode != 200 && statusCode != 201 {
-		log.Println(statusCode, github.GetMessage(bodyBytes))
 		return errors.New(github.GetMessage(bodyBytes))
 	}
 	return nil
@@ -84,21 +83,26 @@ func (member Member) CancelOrganizationInvitation(username string) error {
 func (member Member) createOrganizationInvitation(data interface{}) error {
 	payloadBytes, err := json.Marshal(data)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	body := bytes.NewReader(payloadBytes)
 
 	github := GitHub{Auth: member.Auth}
-	statusCode, bodyBytes := github.Request("POST", "https://api.github.com/orgs/"+member.Owner+"/invitations", body)
+	_, statusCode, bodyBytes := github.Request("POST", "https://api.github.com/orgs/"+member.Owner+"/invitations", body)
 
 	if statusCode != 200 && statusCode != 201 {
-		log.Println(statusCode, github.GetMessage(bodyBytes))
 		return errors.New(github.GetMessage(bodyBytes))
 	}
 	return nil
 }
 
-func (member Member) InviteToCorpTeam(Email string, Role string, teamID int) error {
+func (member Member) InviteToCorpTeam(email string, role string, teamID int) error {
+
+	if role == "member" || role == "Member" {
+		role = "direct_member"
+	} else {
+		return errors.New("Invalid role " + role + " not support!")
+	}
 
 	type Payload struct {
 		Email    string `json:"email"`
@@ -107,21 +111,23 @@ func (member Member) InviteToCorpTeam(Email string, Role string, teamID int) err
 	}
 
 	return member.createOrganizationInvitation(Payload{
-		Email:    Email,
-		Role:     Role,
+		Email:    email,
+		Role:     role,
 		Team_IDs: []int{teamID},
 	})
 }
 
 // InvitedToCorpTeamPending : https://docs.github.com/en/rest/reference/teams#list-pending-team-invitations
-func (member Member) ListPendingTeamInvitations(teamName string) []model.Invitation {
+func (member Member) ListPendingTeamInvitations(teamName string) (error, []model.Invitation) {
 	var listInvitaion []model.Invitation
 
 	for i := 0; true; i++ {
 		page := strconv.Itoa((i + 1))
 
-		list_invitation_perpage := member.ListPendingTeamInvitationsPerPage(teamName, page)
-
+		err, list_invitation_perpage := member.ListPendingTeamInvitationsPerPage(teamName, page)
+		if err != nil {
+			return err, nil
+		}
 		if len(list_invitation_perpage) == 0 {
 			break
 		}
@@ -130,30 +136,30 @@ func (member Member) ListPendingTeamInvitations(teamName string) []model.Invitat
 			listInvitaion = append(listInvitaion, team_member)
 		}
 	}
-	return listInvitaion
+	return nil, listInvitaion
 
 }
 
-func (member Member) ListPendingTeamInvitationsPerPage(teamName string, page string) []model.Invitation {
+// https://docs.github.com/en/rest/reference/orgs#list-pending-organization-invitations
+func (member Member) ListPendingTeamInvitationsPerPage(teamName string, page string) (error, []model.Invitation) {
 
 	github := GitHub{Auth: member.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/teams/"+teamName+"/invitations?per_page=30&page="+page, nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/teams/"+teamName+"/invitations?per_page=30&page="+page, nil)
 
 	if statusCode != 200 {
-		log.Println(statusCode, github.GetMessage(bodyBytes))
-		return nil
+		return errors.New(github.GetMessage(bodyBytes)), nil
 	}
 
 	invitations := []model.Invitation{}
 	json.Unmarshal(bodyBytes, &invitations)
 
-	return invitations
+	return nil, invitations
 }
 
 // ListTeamMemberPerPage  see more : https://docs.github.com/en/rest/reference/teams#list-team-members
 func (team Team) ListTeamMemberPerPagex(teamName, page, role string) []model.TeamMember {
 	github := GitHub{Auth: team.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
 
 	if statusCode != 200 {
 		log.Println(statusCode, github.GetMessage(bodyBytes))
@@ -168,7 +174,7 @@ func (team Team) ListTeamMemberPerPagex(teamName, page, role string) []model.Tea
 func (member Member) ListMember() {
 
 	github := GitHub{Auth: member.Auth}
-	statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/members", nil)
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+member.Owner+"/members", nil)
 
 	if statusCode != 200 {
 		log.Println(statusCode, github.GetMessage(bodyBytes))

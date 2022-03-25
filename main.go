@@ -109,10 +109,10 @@ func main() {
 		case "invite":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
-					if options.Team != "" && options.Email != "" && options.Role != "" {
-						gitHubMgr.InviteMemberToCorpTeam(options.Team, options.Role, options.Email)
+					if options.Team != "" && options.Email != "" {
+						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
 					}
-					if options.Team != "" && options.Username != "" && options.Role != "" {
+					if options.Team != "" && options.Username != "" {
 						gitHubMgr.InviteMemberToCorpTeamUsername(options.Team, options.Role, options.Username)
 					}
 					if options.File != "" {
@@ -127,10 +127,11 @@ func main() {
 		case "remove":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
-					if options.Username != "" {
+					if options.Username != "" && options.ORG {
 						gitHubMgr.RemoveOrganizationMember(options.Username)
+					} else if options.Username != "" && options.Team != "" {
+						gitHubMgr.RemoveTeamMembershipForUser(options.Team, options.Username)
 					}
-
 				}
 			}
 		case "login":

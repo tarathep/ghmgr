@@ -26,18 +26,17 @@ jobs:
 
     - name: Build
       run: |
-        CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+        CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -a -installsuffix cgo -o ghmgr.exe .
         ls -al
     
     # - name: Copy Webapp Configuration
     #   run: cp ${{ github.workspace }}/web.config ${{ github.workspace }}/bin/Release/netcoreapp3.1/
 
-    # - name: Packing Arifact Files
-    #   run: |
-    #     cd ${{ github.workspace }}/bin/Release/netcoreapp3.1/
-    #     tar -zcvf artifact-imgstorweb-${{ env.RELEASE_VERSION }}.tar.gz *
+    - name: Packing Arifact Files
+      run: |
+        tar -zcvf ghmgr-${{ env.RELEASE_VERSION }}-win-amd64.tar.gz ghmgr.exe
 
-    # - name: Upload Artifact Release
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     files: ${{ github.workspace }}/bin/Release/netcoreapp3.1/artifact-imgstorweb-${{ env.RELEASE_VERSION }}.tar.gz
+    - name: Upload Artifact Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ${{ github.workspace }}/bin/ghmgr-${{ env.RELEASE_VERSION }}-win-amd64.tar.gz

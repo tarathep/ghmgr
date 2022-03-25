@@ -25,7 +25,9 @@ jobs:
 
 
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: |
+        CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+        ls -al
     
     # - name: Copy Webapp Configuration
     #   run: cp ${{ github.workspace }}/web.config ${{ github.workspace }}/bin/Release/netcoreapp3.1/

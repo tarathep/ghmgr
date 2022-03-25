@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/tarathep/ghmgr/model"
@@ -35,7 +36,8 @@ func (Template) ReadFile(filename string) (err error, project string, csvlist []
 				GitHubUser:     record[5]}
 
 			//COMMANT SKIPLINE
-			if csv.ID != "#" {
+
+			if !strings.Contains(csv.ID, "#") {
 				csvlist = append(csvlist, csv)
 			}
 		}

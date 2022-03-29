@@ -24,6 +24,7 @@ type Options struct {
 	Token    string `long:"token" description:"Personal Access Token"`
 	ORG      bool   `short:"o" long:"org" description:"ORG"`
 	Exclude  string `short:"e" long:"exclude" description:"Excude Team"`
+	ID       string `long:"id" description:"ID for references such as GitHub ID, Personal etc."`
 }
 
 func main() {
@@ -55,16 +56,18 @@ func main() {
 		auth.Token = auth.GetToken()
 
 		team := github.Team{Auth: auth, Owner: "corp-ais"}
-		member := github.Member{Auth: auth, Owner: "corp-ais"}
+		organization := github.Organization{Auth: auth, Owner: "corp-ais"}
 		user := github.User{Auth: auth}
 
-		gitHubMgr := manage.GitHubManager{Member: member, Team: team, User: user}
+		gitHubMgr := manage.GitHubManager{Organization: organization, Team: team, User: user}
 
 		switch os.Args[1] {
 
 		case "list":
 			{
-				if len(os.Args) > 2 && os.Args[2] == "member" {
+				if len(os.Args) > 2 && os.Args[2] == "team" {
+					gitHubMgr.ListTeam()
+				} else if len(os.Args) > 2 && os.Args[2] == "member" {
 
 					if options.Team != "" && options.Exclude != "" {
 						if options.Pending {
@@ -91,8 +94,10 @@ func main() {
 					if options.File != "" {
 						gitHubMgr.ReadCSVFile(options.File)
 					}
-					if options.ORG {
-						gitHubMgr.Member.ListMember()
+					if options.ORG && options.Email == "show" {
+						gitHubMgr.ListTeamMembers("email")
+					} else if options.ORG {
+						gitHubMgr.ListTeamMembers("")
 					}
 				}
 			}
@@ -118,8 +123,8 @@ func main() {
 					if options.File != "" {
 						gitHubMgr.InviteMemberToCorpTeamCSV(options.File)
 					}
-					if options.Cancel && options.Username != "" {
-						gitHubMgr.CancelOrganizationInvitation(options.Username)
+					if options.Cancel && options.ID != "" {
+						gitHubMgr.CancelOrganizationInvitation(options.ID)
 					}
 
 				}
@@ -143,9 +148,12 @@ func main() {
 		case "check":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
-					if options.Username != "" {
+					if options.Username != "" && options.Team != "" {
+						gitHubMgr.CheckTeamMembershipForUser(options.Team, options.Username)
+					} else if options.Username != "" {
 						gitHubMgr.CheckOrganizationMembership(options.Username)
 					}
+
 				}
 			}
 		}

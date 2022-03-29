@@ -104,7 +104,7 @@ func (team Team) GetInfoTeam(teamName string) model.Team {
 }
 
 // ListTeamMemberPerPage  see more : https://docs.github.com/en/rest/reference/teams#list-team-members
-func (team Team) ListTeamMemberPerPage(teamName, page, role string) []model.TeamMember {
+func (team Team) ListTeamMemberPerPage(teamName, page, role string) []model.Members {
 	github := GitHub{Auth: team.Auth}
 	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
 
@@ -112,15 +112,15 @@ func (team Team) ListTeamMemberPerPage(teamName, page, role string) []model.Team
 		log.Println(statusCode, github.GetMessage(bodyBytes))
 	}
 
-	list_team_member := []model.TeamMember{}
+	list_team_member := []model.Members{}
 	json.Unmarshal(bodyBytes, &list_team_member)
 
 	return list_team_member
 }
 
 // ListTeamMember  see more : https://docs.github.com/en/rest/reference/teams#list-team-members
-func (team Team) ListTeamMember(teamName string, role string) []model.TeamMember {
-	var listTeamMember []model.TeamMember
+func (team Team) ListTeamMember(teamName string, role string) []model.Members {
+	var listTeamMember []model.Members
 
 	for i := 0; true; i++ {
 		page := strconv.Itoa((i + 1))
@@ -138,13 +138,13 @@ func (team Team) ListTeamMember(teamName string, role string) []model.TeamMember
 	return listTeamMember
 }
 
-func RemoveIndex(s []model.TeamMember, index int) []model.TeamMember {
+func RemoveIndex(s []model.Members, index int) []model.Members {
 	return append(s[:index], s[index+1:]...)
 }
 
 // Optional Exclude IBM Team
-func (team Team) ListTeamMemberExcludeTeam(teamName string, teamExcude string, role string) []model.TeamMember {
-	var listTeamMember []model.TeamMember
+func (team Team) ListTeamMemberExcludeTeam(teamName string, teamExcude string, role string) []model.Members {
+	var listTeamMember []model.Members
 	excludeTeamMember := team.ListTeamMember(teamExcude, "all")
 
 	for _, team_member := range team.ListTeamMember(teamName, role) {
@@ -155,7 +155,7 @@ func (team Team) ListTeamMemberExcludeTeam(teamName string, teamExcude string, r
 	return listTeamMember
 }
 
-func isExist(team_member_login string, excludeTeamMember []model.TeamMember) bool {
+func isExist(team_member_login string, excludeTeamMember []model.Members) bool {
 	for _, exteam := range excludeTeamMember {
 		if exteam.Login == team_member_login {
 			return true
@@ -176,4 +176,41 @@ func (team Team) RemoveTeamMembershipForUser(teamname, username string) error {
 		return errors.New(github.GetMessage(bodyBytes))
 	}
 	return nil
+}
+
+//https://docs.github.com/en/rest/reference/teams#get-team-membership-for-a-user
+func (team Team) GetTeamMembershipForUser(teamname, username string) (error, bool, model.MembershipTeam) {
+	github := GitHub{Auth: team.Auth}
+	err, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamname+"/memberships/"+username, nil)
+	if err != nil {
+		return err, false, model.MembershipTeam{}
+	}
+
+	membership := model.MembershipTeam{}
+	json.Unmarshal(bodyBytes, &membership)
+
+	if statusCode == 200 {
+		return nil, true, membership
+	} else {
+		return nil, false, membership
+	}
+}
+
+// List teams https://docs.github.com/en/rest/reference/teams#list-teams
+func (team Team) ListTeams() (error, []model.Team) {
+	github := GitHub{Auth: team.Auth}
+	err, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams", nil)
+
+	if err != nil {
+		return err, []model.Team{}
+	}
+
+	team_ := []model.Team{}
+	json.Unmarshal(bodyBytes, &team_)
+
+	if statusCode != 200 {
+		return err, team_
+	}
+
+	return nil, team_
 }

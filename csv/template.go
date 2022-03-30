@@ -96,8 +96,8 @@ func (Template) WriteCSV(teamName string, dataset []model.CSV) bool {
 	return true
 }
 
-func (Template) ReadCache() (err error, cache []model.Cache) {
-	records, err := readData("cache.csv")
+func (Template) ReadCache(name string) (err error, cache []model.Cache) {
+	records, err := readData(name)
 
 	if err != nil {
 		log.Fatal(err)
@@ -121,8 +121,8 @@ func (Template) ReadCache() (err error, cache []model.Cache) {
 	return nil, cache
 }
 
-func (Template) WriteCache(dataset []model.Cache) error {
-	file, err := os.Create("cache.csv")
+func (Template) WriteCache(name string, dataset []model.Cache) error {
+	file, err := os.Create(name)
 	if err != nil {
 		return err
 	}

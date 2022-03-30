@@ -66,7 +66,12 @@ func main() {
 		case "list":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "team" {
-					gitHubMgr.ListTeam()
+					if options.Username != "" {
+						gitHubMgr.MembershipOfTeams(options.Username)
+					} else {
+						gitHubMgr.ListTeam()
+					}
+
 				} else if len(os.Args) > 2 && os.Args[2] == "member" {
 
 					if options.Team != "" && options.Exclude != "" {
@@ -79,7 +84,7 @@ func main() {
 						} else {
 							gitHubMgr.ShowListTeamMemberExclude(options.Team, options.Exclude, "all", options.Email)
 						}
-					} else if options.Team != "" {
+					} else if options.Team != "" && options.Team != "show" {
 						if options.Pending {
 							gitHubMgr.ShowListTeamMemberPending(options.Team)
 						} else if options.Role != "" {
@@ -96,6 +101,8 @@ func main() {
 					}
 					if options.ORG && options.Email == "show" {
 						gitHubMgr.ListTeamMembers("email")
+					} else if options.ORG && options.Team == "show" {
+						gitHubMgr.ListTeamMembers("team")
 					} else if options.ORG {
 						gitHubMgr.ListTeamMembers("")
 					}
@@ -108,6 +115,9 @@ func main() {
 						gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
 					} else if options.Team != "" {
 						gitHubMgr.ExportCSVMemberTeam(options.Team)
+					} else {
+
+						// gitHubMgr.ExportMembersReport()
 					}
 				}
 			}
@@ -145,6 +155,12 @@ func main() {
 					auth.SetToken(options.Token)
 				}
 			}
+		case "load":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "cache" {
+					gitHubMgr.Caching()
+				}
+			}
 		case "check":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
@@ -153,7 +169,6 @@ func main() {
 					} else if options.Username != "" {
 						gitHubMgr.CheckOrganizationMembership(options.Username)
 					}
-
 				}
 			}
 		}

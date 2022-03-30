@@ -188,19 +188,16 @@ func (organization Organization) ListOrgMember() (error, []model.Members) {
 	return nil, listOrgMember
 }
 
-func (organization Organization) SetCache(cache []model.Cache) {
-	csv.Template{}.WriteCache(cache)
+func (organization Organization) SetCache(name string, cache []model.Cache) {
+	csv.Template{}.WriteCache(name, cache)
 }
 
-func (organization Organization) GetCache() (error, []model.Cache) {
-	err, models := csv.Template{}.ReadCache()
+func (organization Organization) GetCache(name string) (error, []model.Cache) {
+	err, models := csv.Template{}.ReadCache(name)
 
 	if err != nil {
 		return err, nil
 	}
 
-	// for _, d := range models {
-	// 	fmt.Println(d.ID)
-	// }
 	return nil, models
 }

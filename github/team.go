@@ -5,9 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
+	"sort"
 	"strconv"
 
+	"github.com/fatih/color"
+	"github.com/tarathep/ghmgr/csv"
 	"github.com/tarathep/ghmgr/login"
 	"github.com/tarathep/ghmgr/model"
 )
@@ -213,4 +218,78 @@ func (team Team) ListTeams() (error, []model.Team) {
 	}
 
 	return nil, team_
+}
+
+func (team Team) MembershipOfTeams(username string) (err error, output []model.Team) {
+	err, teams := team.ListTeams()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	for _, team_ := range teams {
+		err, isMember, _ := team.GetTeamMembershipForUser(team_.Name, username)
+
+		if err != nil {
+			return err, nil
+		}
+		if isMember {
+			output = append(output, team_)
+		}
+	}
+	return nil, output
+}
+
+// CHECK USERNAME IN TEAMS CACHE
+func (team Team) MembershipOfTeamsCache(username string) (error, []string) {
+	var teams []string
+	err, cacheTeams := team.ImportTeamMemberCache()
+	if err != nil {
+		return err, nil
+	}
+	for _, cts := range cacheTeams {
+		for _, ct := range cts {
+
+			if ct.Username == username {
+				teams = append(teams, ct.Team)
+			}
+		}
+	}
+	return nil, teams
+}
+
+func (team Team) ImportTeamMemberCache() (error, [][]model.Cache) {
+	files, err := ioutil.ReadDir("./cache/teams")
+	if err != nil {
+		return err, nil
+	}
+	var cacheTeams [][]model.Cache
+	for _, f := range files {
+		_, c := GetCache("./cache/teams/" + f.Name())
+		cacheTeams = append(cacheTeams, c)
+	}
+
+	return nil, cacheTeams
+}
+
+func SetCache(name string, cache []model.Cache) {
+	csv.Template{}.WriteCache(name, cache)
+}
+
+func GetCache(name string) (error, []model.Cache) {
+	err, models := csv.Template{}.ReadCache(name)
+
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, models
+}
+
+func bstFindByID(users []int, x int) bool {
+	i := sort.Search(len(users), func(i int) bool { return x <= users[i] })
+
+	if i < len(users) && users[i] == x {
+		return true
+	}
+	return false
 }

@@ -109,6 +109,8 @@ func main() {
 						gitHubMgr.ListTeamMembers("email")
 					} else if options.ORG && options.Team == "show" {
 						gitHubMgr.ListTeamMembers("team")
+					} else if options.ORG && options.Pending {
+						gitHubMgr.ShowListPendingOrganizationInvitations()
 					} else if options.ORG {
 						gitHubMgr.ListTeamMembers("")
 					}
@@ -133,17 +135,15 @@ func main() {
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Team != "" && options.Email != "" {
 						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
-					}
-					if options.Team != "" && options.Username != "" {
-						gitHubMgr.InviteMemberToCorpTeamUsername(options.Team, options.Role, options.Username)
-					}
-					if options.File != "" {
+					} else if options.Team != "" && options.Username != "" && options.Role != "" {
+						gitHubMgr.AddOrUpdateTeamMembership(options.Team, options.Role, options.Username)
+					} else if options.File != "" {
 						gitHubMgr.InviteMemberToCorpTeamCSV(options.File)
-					}
-					if options.Cancel && options.ID != "" {
+					} else if options.Cancel && options.ID != "" {
 						gitHubMgr.CancelOrganizationInvitation(options.ID)
+					} else if options.Cancel && options.Email != "" {
+						gitHubMgr.CancelOrganizationInvitationByEmail(options.Email)
 					}
-
 				}
 			}
 		case "remove":

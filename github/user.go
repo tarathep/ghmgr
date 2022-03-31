@@ -25,3 +25,20 @@ func (user User) UserInfo(username string) (error, model.User) {
 
 	return nil, usr
 }
+
+func (user User) EmailToUsername(caches []model.Cache, email string) string {
+	for _, c := range caches {
+		if c.Email == email {
+			return c.Username
+		}
+	}
+	return ""
+}
+func (user User) CheckAlreadyMemberByEmail(caches []model.Cache, email string) bool {
+	for _, c := range caches {
+		if c.Email == email {
+			return true
+		}
+	}
+	return false
+}

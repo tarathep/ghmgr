@@ -345,3 +345,27 @@ func bstFindByID(users []int, x int) bool {
 	}
 	return false
 }
+
+func (team Team) AddOrUpdateTeamMembershipForAUser(username string, teamName string, role string) (error, model.TeamRole) {
+
+	payloadBytes, err := json.Marshal(struct {
+		Role string `json:"role"`
+	}{Role: role})
+
+	if err != nil {
+		return err, model.TeamRole{}
+	}
+	body := bytes.NewReader(payloadBytes)
+
+	github := GitHub{Auth: team.Auth}
+	_, statusCode, bodyBytes := github.Request("PUT", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/memberships/"+username, body)
+
+	if statusCode != 200 {
+		log.Println(statusCode, github.GetMessage(bodyBytes))
+	}
+
+	teamRole := model.TeamRole{}
+	json.Unmarshal(bodyBytes, &teamRole)
+
+	return nil, teamRole
+}

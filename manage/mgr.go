@@ -207,47 +207,56 @@ func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, role strin
 
 	//MEMBER ONLY!!
 	role = "direct_member"
-	mgr.InviteMemberToCorpTeam(teamName, role, email)
-}
 
-func (mgr GitHubManager) InviteMemberToCorpTeam(teamName string, role string, email string) {
-	fmt.Printf(" %40s\t%20s : ", email, teamName)
-
-	//  UNCOMMENT to INVITE !!!!
-
-	teamID := mgr.Team.GetInfoTeam(teamName).ID
-
-	if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
-		color.New(color.FgHiRed).Println("Error ", err.Error())
+	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
 		os.Exit(1)
-	} else {
-		color.New(color.FgHiGreen).Println("Done")
 	}
 
+	mgr.InviteMemberToCorpTeam(caches, teamName, role, email)
+}
+
+func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName string, role string, email string) {
+	fmt.Printf(" %40s\t%20s : ", email, teamName)
+
+	if mgr.User.CheckAlreadyMemberByEmail(caches, email) {
+		color.New(color.FgHiMagenta).Println("Already Exist")
+	} else {
+		teamID := mgr.Team.GetInfoTeam(teamName).ID
+
+		if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
+			color.New(color.FgHiRed).Println("Error ", err.Error())
+			os.Exit(1)
+		} else {
+			color.New(color.FgHiGreen).Println("Done")
+		}
+	}
 }
 
 //  xxx reflactor waiting
-func (mgr GitHubManager) InviteMemberToCorpTeamUsername(teamName string, role string, username string) {
+func (mgr GitHubManager) AddOrUpdateTeamMembership(teamName string, role string, username string) {
+	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. Adds an organization member to a team. , An authenticated organization owner or team maintainer can add organization members to a team. \n")
 
-	// if role == "member" || role == "Member" {
-	// 	role = "direct_member"
-	// } else if role == "maintainer" || role == "Maintainer" {
-	// 	role = "maintainer"
-	// }
-
-	teamID := mgr.Team.GetInfoTeam(teamName).ID
-	if err := mgr.Organization.InviteToCorpTeamUserName(username, role, teamID); err != nil {
-		log.Fatal(err.Error())
-
+	err, teamRole := mgr.AddOrUpdateTeamMembershipForAUser(username, teamName, role)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
 		os.Exit(1)
-	} else {
-		fmt.Print("Invite Successful")
 	}
+	fmt.Println(teamRole)
 }
 
 func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 
 	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
+
+	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
 
 	templ := csv.Template{}
 
@@ -259,7 +268,8 @@ func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 
 	for i, csvTempl := range csvTemplate {
 		fmt.Print((i + 1), "\t")
-		mgr.InviteMemberToCorpTeam(proj, "direct_member", csvTempl.Email)
+
+		mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
 	}
 }
 
@@ -267,6 +277,22 @@ func (mgr GitHubManager) ShowListTeamMemberPending(teamName string) {
 	color.New(color.Italic).Print("List pending [" + teamName + "] team invitations\n")
 
 	err, pendings := mgr.Organization.ListPendingTeamInvitations(teamName)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%40s\n", "No.", "ID", "Email")
+
+	for i, invitation := range pendings {
+		fmt.Printf("%3d\t%10d\t%40s\n", i+1, invitation.ID, invitation.Email)
+	}
+}
+
+func (mgr GitHubManager) ShowListPendingOrganizationInvitations() {
+	color.New(color.Italic).Print("List pending organization invitations\n")
+
+	err, pendings := mgr.Organization.ListPendingOrganizationInvitations()
 	if err != nil {
 		color.New(color.FgHiRed).Println(err.Error())
 		os.Exit(1)
@@ -359,6 +385,25 @@ func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude
 
 }
 
+func (mgr GitHubManager) CancelOrganizationInvitationByEmail(email string) {
+	color.New(color.Italic).Println("Cancel an organization invitation. In order to cancel an organization invitation, the authenticated user must be an organization owner.")
+
+	color.New(color.FgYellow).Print("Cancel invitation Email [" + email + "] : ")
+
+	if err, invitationID := mgr.Organization.InviteEmailToInviteID(email); err != nil {
+		color.New(color.FgHiRed).Println("ERROR ", err)
+		os.Exit(1)
+	} else {
+		if err := mgr.Organization.CancelOrganizationInvitation(invitationID); err != nil {
+			color.New(color.FgHiRed).Println("ERROR ", err)
+			os.Exit(1)
+		} else {
+			color.New(color.FgHiGreen).Println("Done")
+		}
+	}
+
+}
+
 func (mgr GitHubManager) CancelOrganizationInvitation(invitationID string) {
 	color.New(color.Italic).Println("Cancel an organization invitation. In order to cancel an organization invitation, the authenticated user must be an organization owner.")
 
@@ -394,6 +439,10 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 func (mgr GitHubManager) RemoveTeamMembershipForUser(teamname, username string) {
 	color.New(color.Italic).Print("To remove a membership between a user and a team, the authenticated user must have 'admin' permissions to the team or be an owner of the organization that the team is associated with. Removing team membership does not delete the user, it just removes their membership from the team.\n")
 	color.New(color.FgHiRed).Print(username, " removing a "+teamname+" team :")
+	if err := mgr.Team.RemoveTeamMembershipForUser(teamname, username); err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
 	color.New(color.FgHiGreen).Println(" Done")
 }
 

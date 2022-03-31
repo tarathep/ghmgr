@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"os"
 	"strconv"
 
+	"github.com/fatih/color"
 	"github.com/tarathep/ghmgr/csv"
 	"github.com/tarathep/ghmgr/login"
 	"github.com/tarathep/ghmgr/model"
@@ -114,7 +116,6 @@ func (organization Organization) InviteToCorpTeam(email string, role string, tea
 // InvitedToCorpTeamPending : https://docs.github.com/en/rest/reference/teams#list-pending-team-invitations
 func (organization Organization) ListPendingTeamInvitations(teamName string) (error, []model.Invitation) {
 	var listInvitaion []model.Invitation
-
 	for i := 0; true; i++ {
 		page := strconv.Itoa((i + 1))
 
@@ -131,7 +132,26 @@ func (organization Organization) ListPendingTeamInvitations(teamName string) (er
 		}
 	}
 	return nil, listInvitaion
+}
 
+func (organization Organization) ListPendingOrganizationInvitations() (error, []model.Invitation) {
+	var listInvitaion []model.Invitation
+	for i := 0; true; i++ {
+		page := strconv.Itoa((i + 1))
+
+		err, list_invitation_perpage := organization.ListPendingOrganizationInvitationsPerPage(page)
+		if err != nil {
+			return err, nil
+		}
+		if len(list_invitation_perpage) == 0 {
+			break
+		}
+
+		for _, team_member := range list_invitation_perpage {
+			listInvitaion = append(listInvitaion, team_member)
+		}
+	}
+	return nil, listInvitaion
 }
 
 // https://docs.github.com/en/rest/reference/orgs#list-pending-organization-invitations
@@ -139,6 +159,22 @@ func (organization Organization) ListPendingTeamInvitationsPerPage(teamName stri
 
 	github := GitHub{Auth: organization.Auth}
 	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+organization.Owner+"/teams/"+teamName+"/invitations?per_page=30&page="+page, nil)
+
+	if statusCode != 200 {
+		return errors.New(github.GetMessage(bodyBytes)), nil
+	}
+
+	invitations := []model.Invitation{}
+	json.Unmarshal(bodyBytes, &invitations)
+
+	return nil, invitations
+}
+
+// https://docs.github.com/en/rest/reference/orgs#list-pending-organization-invitations
+func (organization Organization) ListPendingOrganizationInvitationsPerPage(page string) (error, []model.Invitation) {
+
+	github := GitHub{Auth: organization.Auth}
+	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+organization.Owner+"/invitations?per_page=100&page="+page, nil)
 
 	if statusCode != 200 {
 		return errors.New(github.GetMessage(bodyBytes)), nil
@@ -200,4 +236,19 @@ func (organization Organization) GetCache(name string) (error, []model.Cache) {
 	}
 
 	return nil, models
+}
+
+func (organization Organization) InviteEmailToInviteID(email string) (error, string) {
+	err, pendings := organization.ListPendingOrganizationInvitations()
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	for _, invitation := range pendings {
+		if email == invitation.Email {
+			return nil, strconv.Itoa(invitation.ID)
+		}
+	}
+	return nil, ""
 }

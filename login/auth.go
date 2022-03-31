@@ -9,7 +9,8 @@ import (
 )
 
 type Auth struct {
-	Token string
+	Token   string
+	Version string
 }
 
 func (auth Auth) LoginWithToken() {

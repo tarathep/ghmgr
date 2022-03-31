@@ -10,6 +10,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/tarathep/ghmgr/csv"
@@ -203,8 +204,30 @@ func (team Team) GetTeamMembershipForUser(teamname, username string) (error, boo
 
 // List teams https://docs.github.com/en/rest/reference/teams#list-teams
 func (team Team) ListTeams() (error, []model.Team) {
+	var listTeam []model.Team
+
+	for i := 0; true; i++ {
+		page := strconv.Itoa((i + 1))
+
+		err, list_team_perpage := team.ListTeamsPerPage(page)
+		if err != nil {
+			return err, nil
+		}
+
+		if len(list_team_perpage) == 0 {
+			break
+		}
+
+		for _, teams := range list_team_perpage {
+			listTeam = append(listTeam, teams)
+		}
+	}
+	return nil, listTeam
+}
+
+func (team Team) ListTeamsPerPage(page string) (error, []model.Team) {
 	github := GitHub{Auth: team.Auth}
-	err, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams", nil)
+	err, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams?page="+page, nil)
 
 	if err != nil {
 		return err, []model.Team{}
@@ -240,7 +263,7 @@ func (team Team) MembershipOfTeams(username string) (err error, output []model.T
 }
 
 // CHECK USERNAME IN TEAMS CACHE
-func (team Team) MembershipOfTeamsCache(username string) (error, []string) {
+func (team Team) MembershipOfTeamsCacheTeam(username string) (error, []string) {
 	var teams []string
 	err, cacheTeams := team.ImportTeamMemberCache()
 	if err != nil {
@@ -269,6 +292,35 @@ func (team Team) ImportTeamMemberCache() (error, [][]model.Cache) {
 	}
 
 	return nil, cacheTeams
+}
+
+func (team Team) MembershipOfTeamsCache(caches []model.Cache, username string) []string {
+	for _, c := range caches {
+		if c.Username == username {
+			return strings.Split(c.Team, ",")
+		}
+	}
+	return nil
+}
+
+func (team Team) CheckMembershipOutOfTeamsCache(caches []model.Cache, username string) bool {
+	for _, c := range caches {
+		if c.Username == username {
+			if c.Team == "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (team Team) MemberCacheByUser(caches []model.Cache, username string) model.Cache {
+	for _, c := range caches {
+		if c.Username == username {
+			return c
+		}
+	}
+	return model.Cache{}
 }
 
 func SetCache(name string, cache []model.Cache) {

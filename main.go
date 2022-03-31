@@ -27,6 +27,8 @@ type Options struct {
 	ID       string `long:"id" description:"ID for references such as GitHub ID, Personal etc."`
 }
 
+const version string = "v1.0.0"
+
 func main() {
 
 	// teamID := team.GetInfoTeam("ipfm").ID
@@ -47,7 +49,7 @@ func main() {
 	flags.NewIniParser(parser)
 
 	if options.Version {
-		fmt.Print("v1.0.0")
+		fmt.Print(version)
 	}
 
 	if len(os.Args) > 1 {
@@ -59,7 +61,7 @@ func main() {
 		organization := github.Organization{Auth: auth, Owner: "corp-ais"}
 		user := github.User{Auth: auth}
 
-		gitHubMgr := manage.GitHubManager{Organization: organization, Team: team, User: user}
+		gitHubMgr := manage.GitHubManager{Version: version, Organization: organization, Team: team, User: user}
 
 		switch os.Args[1] {
 
@@ -99,7 +101,11 @@ func main() {
 					if options.File != "" {
 						gitHubMgr.ReadCSVFile(options.File)
 					}
-					if options.ORG && options.Email == "show" {
+					if options.ORG && options.Email == "show" && options.Team == "show" {
+						gitHubMgr.ListTeamMembers("all")
+					} else if options.ORG && options.Exclude == "team" {
+						gitHubMgr.ListExculdeTeamMembers()
+					} else if options.ORG && options.Email == "show" {
 						gitHubMgr.ListTeamMembers("email")
 					} else if options.ORG && options.Team == "show" {
 						gitHubMgr.ListTeamMembers("team")
@@ -115,9 +121,10 @@ func main() {
 						gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
 					} else if options.Team != "" {
 						gitHubMgr.ExportCSVMemberTeam(options.Team)
-					} else {
-
-						// gitHubMgr.ExportMembersReport()
+					} else if options.ORG && options.Exclude == "team" {
+						gitHubMgr.ExportORGMemberWithOutMembershipOfTeamReport()
+					} else if options.ORG {
+						gitHubMgr.ExportORGMemberReport()
 					}
 				}
 			}

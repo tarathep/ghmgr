@@ -19,6 +19,7 @@ type GitHubManager struct {
 	github.Team
 	github.Organization
 	github.User
+	Version string
 }
 
 // https://docs.github.com/en/rest/reference/teams#get-team-membership-for-a-user
@@ -52,7 +53,7 @@ func (mgr GitHubManager) ListTeam() {
 	}
 
 	for i, team := range teams {
-		fmt.Println(i+1, "\t"+strconv.Itoa(team.ID), "\t"+team.Name)
+		fmt.Println(i+1, "\t"+strconv.Itoa(team.ID), "\t"+team.Slug)
 	}
 }
 
@@ -71,53 +72,46 @@ func (mgr GitHubManager) MembershipOfTeams(username string) {
 	for i, team := range teams {
 		fmt.Printf("%3d\t%10d\t%23s\n", i+1, team.ID, team.Name)
 	}
-
 }
 
-//https://docs.github.com/en/rest/reference/teams#list-team-members
 func (mgr GitHubManager) ListTeamMembers(option string) {
 	start := time.Now()
 
 	color.New(color.Italic).Print("Team members will include the members of child teams.\nTo list members in a team, the team must be visible to the authenticated user..\n")
 
-	if option == "email" {
+	switch option {
+	case "all":
+		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\t%40s\t\tTeams\n", "No.", "ID", "Username", "Email")
+	case "email":
 		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\t%40s\n", "No.", "ID", "Username", "Email")
-	} else if option == "team" {
+	case "team":
 		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\t\tTeams\n", "No.", "ID", "Username")
-	} else {
-
+	default:
 		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\n", "No.", "ID", "Username")
 	}
 
+	//https://docs.github.com/en/rest/reference/teams#list-team-members
 	err, i := mgr.Organization.ListOrgMember()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
 	if err != nil {
 		color.New(color.FgRed).Println(err.Error())
 		os.Exit(1)
 	}
 
 	for i, member := range i {
-		var membership string
-
-		if option == "team" {
-			//GET TEAMS
-			err, teams := mgr.Team.MembershipOfTeams(member.Login)
-
-			if err != nil {
-				color.New(color.FgRed).Println(err.Error())
-				os.Exit(1)
-			}
-			fmt.Printf("%3d\t%10d\t%23s\t\t", i+1, member.ID, member.Login)
-
-			fmt.Print("\t")
-			for _, team := range teams {
-				membership += team.Name + "|"
-				fmt.Print("," + team.Name)
-			}
-			fmt.Print("\n")
-		} else if option == "email" {
-			_, usrInfo := mgr.UserInfo(member.Login)
-			fmt.Printf("%3d\t%10d\t%23s\t%40s\n", i+1, member.ID, member.Login, usrInfo.Email)
-		} else {
+		switch option {
+		case "all":
+			fmt.Printf("%3d\t%10d\t%23s\t%40s\t\t"+mgr.Team.MemberCacheByUser(caches, member.Login).Team+"\n", (i + 1), member.ID, member.Login, mgr.Team.MemberCacheByUser(caches, member.Login).Email)
+		case "email":
+			fmt.Printf("%3d\t%10d\t%23s\t%40s\n", i+1, member.ID, member.Login, mgr.Team.MemberCacheByUser(caches, member.Login).Email)
+		case "team":
+			fmt.Printf("%3d\t%10d\t%23s\t\t"+mgr.Team.MemberCacheByUser(caches, member.Login).Team+"\n", i+1, member.ID, member.Login)
+		default:
 			fmt.Printf("%3d\t%10d\t%23s\n", i+1, member.ID, member.Login)
 		}
 	}
@@ -125,14 +119,18 @@ func (mgr GitHubManager) ListTeamMembers(option string) {
 }
 
 func (mgr GitHubManager) ShowListTeamMember(teamName string, role string, email string) {
-	var cache []model.Cache
+	start := time.Now()
 
+	//Header
 	color.New(color.Italic).Print("Team members will include the members of child teams.\nTo list members in a [" + teamName + "] team, the team must be visible to the authenticated user.\n")
-	if email != "" {
+
+	if email == "show" {
 		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\t%40s\n", "No.", "ID", "Username", "Email")
 	} else {
 		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\n", "No.", "ID", "Username")
 	}
+
+	// Process
 	for i, teamMember := range mgr.Team.ListTeamMember(teamName, role) {
 		if !(role == "all" || role == "member" || role == "maintainer") {
 			color.New(color.FgRed).Println("Invalid role")
@@ -141,27 +139,21 @@ func (mgr GitHubManager) ShowListTeamMember(teamName string, role string, email 
 			if email == "show" {
 				_, usrInfo := mgr.UserInfo(teamMember.Login)
 				fmt.Printf("%3d\t%10d\t%23s\t%40s\n", i+1, teamMember.ID, teamMember.Login, usrInfo.Email)
-				cache = append(cache, model.Cache{
-					No:       strconv.Itoa(i + 1),
-					ID:       strconv.Itoa(teamMember.ID),
-					Username: teamMember.Login,
-					Email:    usrInfo.Email,
-					Team:     teamName,
-				})
 			} else {
 				fmt.Printf("%3d\t%10d\t%23s\n", i+1, teamMember.ID, teamMember.Login)
-
 			}
 		} else {
 			fmt.Printf("%3d\t%10d\t%23s\n", i+1, teamMember.ID, teamMember.Login)
-
 		}
 	}
-	mgr.SetCache("cache.csv", cache)
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
 func (mgr GitHubManager) ShowListTeamMemberExclude(teamName string, teamExcude string, role string, email string) {
+	start := time.Now()
 
+	// Header
 	color.New(color.Italic).Print("Team members will include the members of child teams.\nTo list members in a [" + teamName + "] team and Exclude [" + teamExcude + "] , the team must be visible to the authenticated user.\n")
 
 	if email != "" {
@@ -169,6 +161,8 @@ func (mgr GitHubManager) ShowListTeamMemberExclude(teamName string, teamExcude s
 	} else {
 		color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\n", "No.", "ID", "Username")
 	}
+
+	// Process
 	for i, teamMember := range mgr.Team.ListTeamMemberExcludeTeam(teamName, teamExcude, role) {
 		if !(role == "all" || role == "member" || role == "maintainer") {
 			color.New(color.FgRed).Println("Invalid role")
@@ -184,6 +178,8 @@ func (mgr GitHubManager) ShowListTeamMemberExclude(teamName string, teamExcude s
 			fmt.Printf("%3d\t%10d\t%23s\n", i+1, teamMember.ID, teamMember.Login)
 		}
 	}
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
 func (mgr GitHubManager) ReadCSVFile(fileName string) {
@@ -284,36 +280,83 @@ func (mgr GitHubManager) ShowListTeamMemberPending(teamName string) {
 }
 
 func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
+	start := time.Now()
 
 	color.New(color.Italic).Print("Export CSV Member Team [" + teamName + "] : ")
-	var dataset []model.CSV
+	var dataset []model.TeamMemberReport
+
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	I := 0
 
 	for _, role := range []string{"maintainer", "member"} {
 		for _, teamMember := range mgr.Team.ListTeamMember(teamName, role) {
-			dataset = append(dataset, model.CSV{GitHubUser: teamMember.Login, GitHubTeamRole: role})
+			I++
+			dataset = append(dataset, model.TeamMemberReport{
+				No:       strconv.Itoa(I),
+				ID:       strconv.Itoa(teamMember.ID),
+				Username: teamMember.Login,
+				Name:     "",
+				Email:    mgr.Team.MemberCacheByUser(caches, teamMember.Login).Email,
+				Role:     role,
+			})
 		}
 	}
-	result := csv.Template{}.WriteCSV(teamName, dataset)
 
-	if result {
-		color.New(color.FgHiGreen).Print("Done")
+	result := csv.WriteTeamMemberReport(teamName, "Report membership of team Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-"+teamName, dataset)
+
+	if result != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
 	}
+	color.New(color.FgHiGreen).Print("Done\n")
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+
 }
 
 func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude string) {
+	start := time.Now()
+
 	color.New(color.Italic).Print("Export CSV Member Team [" + teamName + "] Exclude Team [" + teamExclude + "] : ")
-	var dataset []model.CSV
+	var dataset []model.TeamMemberReport
+
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	I := 0
 
 	for _, role := range []string{"maintainer", "member"} {
 		for _, teamMember := range mgr.Team.ListTeamMemberExcludeTeam(teamName, teamExclude, role) {
-			dataset = append(dataset, model.CSV{GitHubUser: teamMember.Login, GitHubTeamRole: role})
+			I++
+			dataset = append(dataset, model.TeamMemberReport{
+				No:       strconv.Itoa(I),
+				ID:       strconv.Itoa(teamMember.ID),
+				Username: teamMember.Login,
+				Name:     "",
+				Email:    mgr.Team.MemberCacheByUser(caches, teamMember.Login).Email,
+				Role:     role,
+			})
 		}
 	}
-	result := csv.Template{}.WriteCSV(teamName, dataset)
 
-	if result {
-		color.New(color.FgHiGreen).Print("Done")
+	result := csv.WriteTeamMemberReport(teamName, "Report membership of team Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-"+teamName, dataset)
+
+	if result != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
 	}
+	color.New(color.FgHiGreen).Print("Done\n")
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+
 }
 
 func (mgr GitHubManager) CancelOrganizationInvitation(invitationID string) {
@@ -363,7 +406,6 @@ func (mgr GitHubManager) Caching() {
 	mgr.ExportTeamMemberCache()
 	mgr.ExportMembersORGCache()
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
-
 }
 
 func removeContents(dir string) error {
@@ -397,7 +439,7 @@ func (mgr GitHubManager) ExportTeamMemberCache() {
 	var wg sync.WaitGroup
 	wg.Add(len(teams))
 
-	color.New(color.FgHiCyan).Print("Caching Membership of Teams ")
+	color.New(color.FgHiCyan).Print("Caching Membership of Teams : ")
 	for _, team := range teams {
 		defer wg.Done()
 		var cache []model.Cache
@@ -413,13 +455,13 @@ func (mgr GitHubManager) ExportTeamMemberCache() {
 		// color.New(color.FgHiCyan).Print(".")
 		mgr.SetCache("cache/teams/"+team.Slug+".csv", cache)
 	}
-	color.New(color.FgHiGreen).Print(" : Done\n")
+	color.New(color.FgHiGreen).Print("Done\n")
 }
 
 func (mgr GitHubManager) ExportMembersORGCache() {
 	var cache []model.Cache
 
-	color.New(color.FgHiCyan).Print("Caching Member of Organization ")
+	color.New(color.FgHiCyan).Print("Caching Member of Organization : ")
 
 	err, listOrgMember := mgr.Organization.ListOrgMember()
 	if err != nil {
@@ -431,7 +473,7 @@ func (mgr GitHubManager) ExportMembersORGCache() {
 
 		//GET MEMBER
 		var membership string
-		err, teams := mgr.Team.MembershipOfTeamsCache(orgMem.Login)
+		err, teams := mgr.Team.MembershipOfTeamsCacheTeam(orgMem.Login)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -457,5 +499,129 @@ func (mgr GitHubManager) ExportMembersORGCache() {
 
 	//save
 	mgr.SetCache("cache/cache.csv", cache)
-	color.New(color.FgHiGreen).Print(" : Done\n")
+	color.New(color.FgHiGreen).Print("Done\n")
+}
+
+func (mgr GitHubManager) ListExculdeTeamMembers() {
+	start := time.Now()
+
+	color.New(color.Italic).Print("Team members will exclude the members of child teams.\nTo list members out a team, the team must be visible to the authenticated user..\n")
+
+	color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%23s\t%40s\n", "No.", "ID", "Username", "Email")
+
+	//https://docs.github.com/en/rest/reference/teams#list-team-members
+	err, i := mgr.Organization.ListOrgMember()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	I := 0
+	for _, member := range i {
+		if mgr.Team.CheckMembershipOutOfTeamsCache(caches, member.Login) {
+			I++
+			fmt.Printf("%3d\t%10d\t%23s\t%40s\n", I, member.ID, member.Login, mgr.Team.MemberCacheByUser(caches, member.Login).Email)
+		}
+
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
+func (mgr GitHubManager) ExportORGMemberReport() {
+	start := time.Now()
+	color.New(color.Italic).Print("Export CSV Members of organization : ")
+
+	os.Mkdir("reports", 0755)
+	os.Mkdir("reports/output", 0755)
+
+	//https://docs.github.com/en/rest/reference/teams#list-team-members
+	err, i := mgr.Organization.ListOrgMember()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	var dataset []model.OrgMemberReport
+	for i, member := range i {
+		ds := model.OrgMemberReport{
+			No:       strconv.Itoa(i + 1),
+			ID:       strconv.Itoa(member.ID),
+			Username: member.Login,
+			Name:     "",
+			Email:    mgr.Team.MemberCacheByUser(caches, member.Login).Email,
+			Team:     mgr.Team.MemberCacheByUser(caches, member.Login).Team,
+		}
+
+		dataset = append(dataset, ds)
+	}
+	result := csv.WriteORGMemberReport("Report membership of organization Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-organization", dataset)
+
+	if result != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	color.New(color.FgHiGreen).Print("Done\n")
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
+func (mgr GitHubManager) ExportORGMemberWithOutMembershipOfTeamReport() {
+	start := time.Now()
+	color.New(color.Italic).Print("Export CSV members of organization without membership of team(s) : ")
+
+	os.Mkdir("reports", 0755)
+	os.Mkdir("reports/output", 0755)
+
+	//https://docs.github.com/en/rest/reference/teams#list-team-members
+	err, i := mgr.Organization.ListOrgMember()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	I := 0
+	var dataset []model.OrgMemberReport
+	for i, member := range i {
+		if mgr.Team.CheckMembershipOutOfTeamsCache(caches, member.Login) {
+			I++
+			ds := model.OrgMemberReport{
+				No:       strconv.Itoa(i + 1),
+				ID:       strconv.Itoa(member.ID),
+				Username: member.Login,
+				Name:     "",
+				Email:    mgr.Team.MemberCacheByUser(caches, member.Login).Email,
+				Team:     mgr.Team.MemberCacheByUser(caches, member.Login).Team,
+			}
+
+			dataset = append(dataset, ds)
+		}
+
+	}
+	result := csv.WriteORGMemberReport("Report membership of organization without membership of team(s) Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-organization-without-membership-of-teams", dataset)
+
+	if result != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	color.New(color.FgHiGreen).Print("Done\n")
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }

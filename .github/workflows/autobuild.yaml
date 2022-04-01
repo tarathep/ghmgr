@@ -2,8 +2,8 @@ name: Build Artifact
 
 on:
   push:
-    tags:
-      - '*'
+    # tags:
+    #   - '*'
 
 jobs:
   build:
@@ -23,7 +23,6 @@ jobs:
         go-version: '1.17.7'
     - run: go run main.go list member -t cdc-app
 
-
     - name: Build
       run: |
         CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -a -installsuffix cgo -o ghmgr.exe .
@@ -35,6 +34,7 @@ jobs:
     - name: Packing Arifact Files
       run: |
         tar -zcvf ghmgr-${{ env.RELEASE_VERSION }}-win-amd64.tar.gz ghmgr.exe
+        ls -al
 
     - name: Upload Artifact Release
       uses: softprops/action-gh-release@v1

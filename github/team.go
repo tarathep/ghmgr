@@ -115,7 +115,8 @@ func (team Team) ListTeamMemberPerPage(teamName, page, role string) []model.Memb
 	_, statusCode, bodyBytes := github.Request("GET", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/members?page="+page+"&role="+role, nil)
 
 	if statusCode != 200 {
-		log.Println(statusCode, github.GetMessage(bodyBytes))
+		color.New(color.FgRed).Println(statusCode, github.GetMessage(bodyBytes))
+		os.Exit(1)
 	}
 
 	list_team_member := []model.Members{}

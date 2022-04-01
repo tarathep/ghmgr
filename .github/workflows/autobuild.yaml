@@ -2,8 +2,8 @@ name: Build Artifact
 
 on:
   push:
-    # tags:
-    #   - '*'
+    tags:
+      - '*'
 
 jobs:
   build:

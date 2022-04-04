@@ -2,7 +2,6 @@ package manage
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -202,6 +201,30 @@ func (mgr GitHubManager) ReadCSVFile(fileName string) {
 	}
 }
 
+//WORKING...
+func (mgr GitHubManager) ReadProjectMemberListTemplateCSV(fileName string) {
+
+	templ := csv.Template{}
+
+	err, proj, csvTemplate := templ.ReadProjectMemberListTemplateCSV("reports/input/" + fileName)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	color.New(color.Italic).Print("CSV File Reader.\nTo list members in a  CSV file , [" + proj + "] team, the team must be visible to the GitHub.\n")
+
+	color.New(color.FgHiMagenta).Printf("%2s\t%30s\t%40s\t%20s\t%10s\t%15s\n", "No.", "MemberName", "Email", "Role", "Team Role", "UserName")
+
+	I := 0
+	for _, csvTempl := range csvTemplate {
+		if csvTempl.GitHub == "Y" {
+			I++
+			fmt.Printf("%2d\t%30s\t%40s\t%20s\t%10s\t%15s\n", I, csvTempl.Fullname, csvTempl.Email, csvTempl.Role, csvTempl.GitHubTeamRole, csvTempl.GitHubUsername)
+		}
+	}
+}
+
 func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, role string, email string) {
 	color.New(color.Italic).Print("Create an organization invitation assign to [" + teamName + "] team. (org support member only) \n")
 
@@ -224,6 +247,9 @@ func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName s
 	if mgr.User.CheckAlreadyMemberByEmail(caches, email) {
 		color.New(color.FgHiMagenta).Println("Already Exist")
 	} else {
+
+		//color.New(color.FgHiGreen).Println("Done")
+
 		teamID := mgr.Team.GetInfoTeam(teamName).ID
 
 		if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
@@ -232,21 +258,27 @@ func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName s
 		} else {
 			color.New(color.FgHiGreen).Println("Done")
 		}
+
 	}
 }
 
 //  xxx reflactor waiting
 func (mgr GitHubManager) AddOrUpdateTeamMembership(teamName string, role string, username string) {
-	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. Adds an organization member to a team. , An authenticated organization owner or team maintainer can add organization members to a team. \n")
+	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
 
-	err, teamRole := mgr.AddOrUpdateTeamMembershipForAUser(username, teamName, role)
+	fmt.Print("Team [" + teamName + "] Role [" + role + "] Username [" + username + "] : ")
+
+	err, _ := mgr.AddOrUpdateTeamMembershipForAUser(username, teamName, role)
 	if err != nil {
 		color.New(color.FgHiRed).Println(err.Error())
 		os.Exit(1)
 	}
-	fmt.Println(teamRole)
+
+	color.New(color.FgHiGreen).Println("Done")
+
 }
 
+//OLD
 func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 
 	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
@@ -270,6 +302,47 @@ func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 		fmt.Print((i + 1), "\t")
 
 		mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
+	}
+}
+
+func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
+
+	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
+
+	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	templ := csv.Template{}
+
+	err, proj, csvTemplate := templ.ReadProjectMemberListTemplateCSV("reports/input/" + fileName)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+	//Check Team in ORG
+	if err, check := mgr.Team.CheckTeamInORG(proj); err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	} else if !check {
+		color.New(color.FgYellow).Println("Team [" + proj + "] Not Found in Organization !")
+		os.Exit(1)
+	}
+
+	I := 0
+
+	for _, csvTempl := range csvTemplate {
+
+		if csvTempl.GitHub == "Y" {
+			I++
+			fmt.Print(I, "\t")
+
+			mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
+		}
+
 	}
 }
 
@@ -305,10 +378,24 @@ func (mgr GitHubManager) ShowListPendingOrganizationInvitations() {
 	}
 }
 
-func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
+func (mgr GitHubManager) ExportCSVMemberTeams() {
 	start := time.Now()
+	if err, teams := mgr.Team.ListTeams(); err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	} else {
+		for _, team := range teams {
+			mgr.ExportCSVMemberTeam(team.Slug)
+		}
+		color.New(color.FgHiGreen).Print("Done\n")
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
+func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
 
 	color.New(color.Italic).Print("Export CSV Member Team [" + teamName + "] : ")
+
 	var dataset []model.TeamMemberReport
 
 	err, caches := mgr.GetCache("./cache/cache.csv")
@@ -334,6 +421,91 @@ func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
 	}
 
 	result := csv.WriteTeamMemberReport(teamName, "Report membership of team Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-"+teamName, dataset)
+
+	if result != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	color.New(color.FgHiGreen).Print("Done\n")
+
+}
+
+//EXPORT..
+func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
+	start := time.Now()
+
+	color.New(color.Italic).Print("Export CSV Template Member Team [" + teamName + "] : ")
+	var dataset []model.ProjectMemberListTemplate
+
+	//Load Cache for get info
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	//LOAD Templ
+	templ := csv.Template{}
+	err, _, csvTemplates := templ.ReadProjectMemberListTemplateCSV("reports/input/" + teamName + ".csv")
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	var emails []string
+	I := 0
+
+	for _, role := range []string{"maintainer", "member"} {
+		for _, teamMember := range mgr.Team.ListTeamMember(teamName, role) {
+			I++
+			email := mgr.Team.MemberCacheByUser(caches, teamMember.Login).Email
+
+			templ := mgr.Team.CSVTemplate(csvTemplates, email)
+			if templ.Email != "" {
+				emails = append(emails, templ.Email)
+			}
+
+			dataset = append(dataset, model.ProjectMemberListTemplate{
+				No:                strconv.Itoa(I),
+				Username:          templ.Username,
+				Fullname:          templ.Fullname,
+				Email:             email,
+				Role:              templ.Role,
+				SubscriptionOwner: templ.SubscriptionOwner,
+				GitHubUsername:    teamMember.Login,
+				GitHubTeamRole:    role,
+				GitHub:            "Y",
+				AzureDEV:          templ.AzureDEV,
+				AzurePRD:          templ.AzurePRD,
+				ELK:               templ.ELK,
+				Jumphost:          templ.Jumphost,
+			})
+		}
+	}
+	for _, csvTempl := range csvTemplates {
+		if !mgr.User.CheckEmailInList(emails, csvTempl.Email) && csvTempl.Email != "" {
+			I++
+			fmt.Println(I, csvTempl.Email)
+
+			dataset = append(dataset, model.ProjectMemberListTemplate{
+				No:                strconv.Itoa(I),
+				Username:          csvTempl.Username,
+				Fullname:          csvTempl.Fullname,
+				Email:             csvTempl.Email,
+				Role:              csvTempl.Role,
+				SubscriptionOwner: csvTempl.SubscriptionOwner,
+				GitHubUsername:    csvTempl.GitHubUsername,
+				GitHubTeamRole:    csvTempl.Role,
+				GitHub:            csvTempl.Role,
+				AzureDEV:          csvTempl.AzureDEV,
+				AzurePRD:          csvTempl.AzurePRD,
+				ELK:               csvTempl.ELK,
+				Jumphost:          csvTempl.Jumphost,
+			})
+		}
+	}
+
+	result := csv.Template{}.WriteProjectMemberListTemplateCSV(teamName, "template membership of team Generated by GHMGR "+mgr.Version+" : ", "reports/output/"+teamName, dataset)
 
 	if result != nil {
 		color.New(color.FgRed).Println(err.Error())
@@ -430,8 +602,8 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 
 	color.New(color.Italic).Print("Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories\n")
 	if err := mgr.Organization.RemoveOrganizationMember(username); err != nil {
-		log.Fatal(err.Error())
-
+		color.New(color.FgHiRed).Println("ERROR ", err)
+		os.Exit(1)
 	}
 	color.New(color.FgHiRed).Print(username, " was removed an organization")
 }

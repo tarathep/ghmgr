@@ -42,3 +42,12 @@ func (user User) CheckAlreadyMemberByEmail(caches []model.Cache, email string) b
 	}
 	return false
 }
+
+func (user User) CheckEmailInList(emails []string, email string) bool {
+	for _, e := range emails {
+		if e == email {
+			return true
+		}
+	}
+	return false
+}

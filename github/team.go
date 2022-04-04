@@ -203,6 +203,19 @@ func (team Team) GetTeamMembershipForUser(teamname, username string) (error, boo
 	}
 }
 
+func (team Team) CheckTeamInORG(teamName string) (error, bool) {
+	if err, teams := team.ListTeams(); err != nil {
+		return err, false
+	} else {
+		for _, t := range teams {
+			if t.Slug == teamName {
+				return nil, true
+			}
+		}
+		return nil, false
+	}
+}
+
 // List teams https://docs.github.com/en/rest/reference/teams#list-teams
 func (team Team) ListTeams() (error, []model.Team) {
 	var listTeam []model.Team
@@ -324,6 +337,15 @@ func (team Team) MemberCacheByUser(caches []model.Cache, username string) model.
 	return model.Cache{}
 }
 
+func (team Team) CSVTemplate(templates []model.ProjectMemberListTemplate, email string) model.ProjectMemberListTemplate {
+	for _, template := range templates {
+		if template.Email == email && template.GitHub == "Y" {
+			return template
+		}
+	}
+	return model.ProjectMemberListTemplate{}
+}
+
 func SetCache(name string, cache []model.Cache) {
 	csv.Template{}.WriteCache(name, cache)
 }
@@ -362,7 +384,7 @@ func (team Team) AddOrUpdateTeamMembershipForAUser(username string, teamName str
 	_, statusCode, bodyBytes := github.Request("PUT", "https://api.github.com/orgs/"+team.Owner+"/teams/"+teamName+"/memberships/"+username, body)
 
 	if statusCode != 200 {
-		log.Println(statusCode, github.GetMessage(bodyBytes))
+		return errors.New(github.GetMessage(bodyBytes)), model.TeamRole{}
 	}
 
 	teamRole := model.TeamRole{}

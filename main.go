@@ -22,6 +22,7 @@ type Options struct {
 	Role     string `short:"r" long:"role" description:"Role"`
 	Version  bool   `short:"v" long:"version" description:"Version"`
 	Token    string `long:"token" description:"Personal Access Token"`
+	Owner    string `long:"owner" description:"Owner of GitHub"`
 	ORG      bool   `short:"o" long:"org" description:"ORG"`
 	Exclude  string `short:"e" long:"exclude" description:"Excude Team"`
 	ID       string `long:"id" description:"ID for references such as GitHub ID, Personal etc."`
@@ -56,6 +57,9 @@ func main() {
 		// SET AUTH & CORP
 		auth := login.Auth{}
 		auth.Token = auth.GetToken()
+		if auth.Token == "" {
+			auth.Token = options.Token
+		}
 
 		team := github.Team{Auth: auth, Owner: "corp-ais"}
 		organization := github.Organization{Auth: auth, Owner: "corp-ais"}
@@ -99,7 +103,8 @@ func main() {
 					}
 
 					if options.File != "" {
-						gitHubMgr.ReadCSVFile(options.File)
+						//gitHubMgr.ReadCSVFile(options.File)
+						gitHubMgr.ReadProjectMemberListTemplateCSV(options.File)
 					}
 					if options.ORG && options.Email == "show" && options.Team == "show" {
 						gitHubMgr.ListTeamMembers("all")
@@ -119,15 +124,24 @@ func main() {
 		case "export":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
-					if options.Team != "" && options.Exclude != "" {
-						gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
-					} else if options.Team != "" {
-						gitHubMgr.ExportCSVMemberTeam(options.Team)
-					} else if options.ORG && options.Exclude == "team" {
-						gitHubMgr.ExportORGMemberWithOutMembershipOfTeamReport()
-					} else if options.ORG {
-						gitHubMgr.ExportORGMemberReport()
+					if len(os.Args) > 3 && os.Args[3] == "template" {
+						if options.Team != "" {
+							gitHubMgr.ExportCSVMemberTeamTemplate(options.Team)
+						}
+					} else {
+						if options.Team != "" && options.Exclude != "" {
+							gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
+						} else if options.Team == "all" {
+							gitHubMgr.ExportCSVMemberTeams()
+						} else if options.Team != "" {
+							gitHubMgr.ExportCSVMemberTeam(options.Team)
+						} else if options.ORG && options.Exclude == "team" {
+							gitHubMgr.ExportORGMemberWithOutMembershipOfTeamReport()
+						} else if options.ORG {
+							gitHubMgr.ExportORGMemberReport()
+						}
 					}
+
 				}
 			}
 		case "invite":
@@ -138,7 +152,7 @@ func main() {
 					} else if options.Team != "" && options.Username != "" && options.Role != "" {
 						gitHubMgr.AddOrUpdateTeamMembership(options.Team, options.Role, options.Username)
 					} else if options.File != "" {
-						gitHubMgr.InviteMemberToCorpTeamCSV(options.File)
+						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
 					} else if options.Cancel && options.ID != "" {
 						gitHubMgr.CancelOrganizationInvitation(options.ID)
 					} else if options.Cancel && options.Email != "" {
@@ -161,6 +175,10 @@ func main() {
 				if options.Token != "" {
 					auth.SetToken(options.Token)
 				}
+				if options.Owner != "" {
+					auth.SetOwner(options.Owner)
+				}
+
 			}
 		case "load":
 			{

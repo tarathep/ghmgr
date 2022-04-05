@@ -26,9 +26,11 @@ type Options struct {
 	ORG      bool   `short:"o" long:"org" description:"ORG"`
 	Exclude  string `short:"e" long:"exclude" description:"Excude Team"`
 	ID       string `long:"id" description:"ID for references such as GitHub ID, Personal etc."`
+	Dormant  string `short:"d" long:"dormant" description:"Dormant Users in ORG & Teams"`
+	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
 }
 
-const version string = "v1.0.0"
+const version string = "v1.1.0"
 
 func main() {
 
@@ -56,13 +58,19 @@ func main() {
 	if len(os.Args) > 1 {
 		// SET AUTH & CORP
 		auth := login.Auth{}
+
+		switch os.Args[1] {
+
+		}
+
 		auth.Token = auth.GetToken()
 		if auth.Token == "" {
 			auth.Token = options.Token
 		}
+		auth.Owner = auth.GetOwner()
 
-		team := github.Team{Auth: auth, Owner: "corp-ais"}
-		organization := github.Organization{Auth: auth, Owner: "corp-ais"}
+		team := github.Team{Auth: auth, Owner: auth.Owner}
+		organization := github.Organization{Auth: auth, Owner: auth.Owner}
 		user := github.User{Auth: auth}
 
 		gitHubMgr := manage.GitHubManager{Version: version, Organization: organization, Team: team, User: user}
@@ -79,6 +87,13 @@ func main() {
 					}
 
 				} else if len(os.Args) > 2 && os.Args[2] == "member" {
+
+					if len(os.Args) > 3 && os.Args[3] == "dormant" {
+						if options.File != "" {
+							gitHubMgr.ListDormantUsersfromCSV(options.File)
+							return
+						}
+					}
 
 					if options.Team != "" && options.Exclude != "" {
 						if options.Pending {
@@ -106,6 +121,7 @@ func main() {
 						//gitHubMgr.ReadCSVFile(options.File)
 						gitHubMgr.ReadProjectMemberListTemplateCSV(options.File)
 					}
+
 					if options.ORG && options.Email == "show" && options.Team == "show" {
 						gitHubMgr.ListTeamMembers("all")
 					} else if options.ORG && options.Exclude == "team" {
@@ -127,19 +143,27 @@ func main() {
 					if len(os.Args) > 3 && os.Args[3] == "template" {
 						if options.Team != "" {
 							gitHubMgr.ExportCSVMemberTeamTemplate(options.Team)
+							return
 						}
-					} else {
-						if options.Team != "" && options.Exclude != "" {
-							gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
-						} else if options.Team == "all" {
-							gitHubMgr.ExportCSVMemberTeams()
-						} else if options.Team != "" {
-							gitHubMgr.ExportCSVMemberTeam(options.Team)
-						} else if options.ORG && options.Exclude == "team" {
-							gitHubMgr.ExportORGMemberWithOutMembershipOfTeamReport()
-						} else if options.ORG {
-							gitHubMgr.ExportORGMemberReport()
+					}
+
+					if len(os.Args) > 3 && os.Args[3] == "dormant" {
+						if options.File != "" {
+							gitHubMgr.ExportDormantUsersToCSV(options.File)
+							return
 						}
+					}
+
+					if options.Team != "" && options.Exclude != "" {
+						gitHubMgr.ExportCSVMemberTeamExclude(options.Team, options.Exclude)
+					} else if options.Team == "all" {
+						gitHubMgr.ExportCSVMemberTeams()
+					} else if options.Team != "" {
+						gitHubMgr.ExportCSVMemberTeam(options.Team)
+					} else if options.ORG && options.Exclude == "team" {
+						gitHubMgr.ExportORGMemberWithOutMembershipOfTeamReport()
+					} else if options.ORG {
+						gitHubMgr.ExportORGMemberReport()
 					}
 
 				}
@@ -150,7 +174,7 @@ func main() {
 					if options.Team != "" && options.Email != "" {
 						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
 					} else if options.Team != "" && options.Username != "" && options.Role != "" {
-						gitHubMgr.AddOrUpdateTeamMembership(options.Team, options.Role, options.Username)
+						gitHubMgr.AddOrUpdateTeamMembershipUsername(options.Team, options.Role, options.Username)
 					} else if options.File != "" {
 						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
 					} else if options.Cancel && options.ID != "" {
@@ -167,6 +191,14 @@ func main() {
 						gitHubMgr.RemoveOrganizationMember(options.Username)
 					} else if options.Username != "" && options.Team != "" {
 						gitHubMgr.RemoveTeamMembershipForUser(options.Team, options.Username)
+					}
+
+					//xxx
+					if len(os.Args) > 3 && os.Args[3] == "dormant" {
+						if options.File != "" {
+							gitHubMgr.RemoveDormantUsersFromCSV(options.Backup, options.File)
+							return
+						}
 					}
 				}
 			}

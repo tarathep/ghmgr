@@ -262,11 +262,14 @@ func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName s
 	}
 }
 
-//  xxx reflactor waiting
-func (mgr GitHubManager) AddOrUpdateTeamMembership(teamName string, role string, username string) {
+func (mgr GitHubManager) AddOrUpdateTeamMembershipUsername(teamName string, role string, username string) {
 	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
+	mgr.AddOrUpdateTeamMembership("", teamName, role, username)
+}
 
-	fmt.Print("Team [" + teamName + "] Role [" + role + "] Username [" + username + "] : ")
+func (mgr GitHubManager) AddOrUpdateTeamMembership(email string, teamName string, role string, username string) {
+
+	fmt.Printf(" %40s\t%20s\t%20s\t%20s : ", email, teamName, username, role)
 
 	err, _ := mgr.AddOrUpdateTeamMembershipForAUser(username, teamName, role)
 	if err != nil {
@@ -278,7 +281,7 @@ func (mgr GitHubManager) AddOrUpdateTeamMembership(teamName string, role string,
 
 }
 
-//OLD
+// Deprecated templates
 func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
 
 	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
@@ -337,10 +340,17 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 	for _, csvTempl := range csvTemplate {
 
 		if csvTempl.GitHub == "Y" {
-			I++
-			fmt.Print(I, "\t")
+			if csvTempl.Email != "" && csvTempl.GitHubUsername != "" {
+				I++
+				fmt.Print(I, "\t")
 
-			mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
+				mgr.AddOrUpdateTeamMembership(csvTempl.Email, proj, csvTempl.GitHubTeamRole, csvTempl.GitHubUsername)
+			} else if csvTempl.Email != "" {
+				I++
+				fmt.Print(I, "\t")
+
+				mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
+			}
 		}
 
 	}
@@ -596,6 +606,136 @@ func (mgr GitHubManager) CheckOrganizationMembership(username string) {
 	} else {
 		color.New(color.FgHiRed).Print(username, " is not an organization member or err ", err.Error())
 	}
+}
+
+func (mgr GitHubManager) ListDormantUsersfromCSV(filename string) {
+
+	color.New(color.Italic).Println("List Dormant users of the organization from [" + filename + "] CSV file")
+
+	color.New(color.FgHiMagenta).Printf("%3s\t%10s\t%20s\t%20s\tTeams\n", "No.", "ID", "Username", "LastActive")
+
+	err, dormantUsers := csv.Template{}.ReadDormantCSV("reports/input/" + filename)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	for i, dormantUser := range dormantUsers {
+
+		ts := ""
+		err, teams := mgr.Team.MembershipOfTeamsCacheTeam(dormantUser.Login)
+		if err != nil {
+			color.New(color.FgRed).Println(err.Error())
+			os.Exit(1)
+		}
+		for j, team := range teams {
+			if j == 0 {
+				ts += team
+			} else {
+				ts += "|" + team
+			}
+		}
+		fmt.Printf("%3d\t%10s\t%20s\t%20s\t"+ts+"\n", i+1, dormantUser.ID, dormantUser.Login, dormantUser.LastActive)
+	}
+}
+
+func (mgr GitHubManager) ExportDormantUsersToCSV(filename string) {
+
+	color.New(color.Italic).Println("Export report dormant users of the organization from [" + filename + "] CSV file")
+	fmt.Print("Exporting : ")
+
+	err, dormantUsers := csv.Template{}.ReadDormantCSV("reports/input/" + filename)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	var dataset []model.DormantUser
+	for i, dormantUser := range dormantUsers {
+		ts := ""
+		err, teams := mgr.Team.MembershipOfTeamsCacheTeam(dormantUser.Login)
+		if err != nil {
+			color.New(color.FgRed).Println(err.Error())
+			os.Exit(1)
+		}
+		for j, team := range teams {
+			if j == 0 {
+				ts += team
+			} else {
+				ts += "|" + team
+			}
+		}
+
+		dataset = append(dataset, model.DormantUser{
+			No:           strconv.Itoa(i + 1),
+			CreateAt:     dormantUser.CreateAt,
+			ID:           dormantUser.ID,
+			Login:        dormantUser.Login,
+			Role:         dormantUser.Role,
+			Suspended:    dormantUser.Suspended,
+			LastLoggedIP: dormantUser.LastLoggedIP,
+			Dormant:      dormantUser.Dormant,
+			LastActive:   dormantUser.LastActive,
+			TwoFAEnabled: dormantUser.TwoFAEnabled,
+			Teams:        ts,
+			Excepted:     dormantUser.Excepted,
+		})
+	}
+
+	result := csv.Template{}.WriteDormantCSV("reports/output/"+filename, dataset)
+	if result != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+	color.New(color.FgHiGreen).Println("Done")
+}
+
+func (mgr GitHubManager) RemoveDormantUsersFromCSV(backup bool, filename string) {
+
+	color.New(color.Italic).Println("Remove dormant users of the organization from [" + filename + "] CSV file")
+
+	if backup {
+		color.New(color.FgCyan).Print("Backup Report : ")
+		mgr.ExportDormantUsersToCSV(filename)
+	}
+
+	err, dormantUsers := csv.Template{}.ReadDormantCSV("reports/input/" + filename)
+	if err != nil {
+		color.New(color.FgHiRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	I := 0
+	for _, dormantUser := range dormantUsers {
+		if dormantUser.Excepted != "Y" && dormantUser.Excepted != "Yes" {
+			I++
+
+			ts := ""
+			err, teams := mgr.Team.MembershipOfTeamsCacheTeam(dormantUser.Login)
+			if err != nil {
+				color.New(color.FgRed).Println(err.Error())
+				os.Exit(1)
+			}
+			for j, team := range teams {
+				if j == 0 {
+					ts += team
+				} else {
+					ts += "|" + team
+				}
+			}
+
+			color.New(color.FgHiRed).Print(dormantUser.Login, " Removing : ")
+
+			if err := mgr.Organization.RemoveOrganizationMember(dormantUser.Login); err != nil {
+				color.New(color.FgHiRed).Println("ERROR ", err)
+				os.Exit(1)
+			}
+
+			color.New(color.FgHiGreen).Println("Done")
+		}
+
+	}
+
 }
 
 func (mgr GitHubManager) RemoveOrganizationMember(username string) {

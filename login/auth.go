@@ -9,6 +9,7 @@ import (
 
 type Auth struct {
 	Token   string
+	Owner   string
 	Version string
 }
 

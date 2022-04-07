@@ -173,16 +173,32 @@ func main() {
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Team != "" && options.Email != "" {
 						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
-					} else if options.Team != "" && options.Username != "" && options.Role != "" {
-						gitHubMgr.AddOrUpdateTeamMembershipUsername(options.Team, options.Role, options.Username)
-					} else if options.Team != "" && options.Email != "" && options.Role != "" {
-						gitHubMgr.AddOrUpdateTeamMembershipEmail(options.Team, options.Role, options.Email)
-					} else if options.File != "" {
+						return
+					}
+					if options.File != "" {
 						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
-					} else if options.Cancel && options.ID != "" {
+						return
+					}
+					if options.Cancel && options.ID != "" {
 						gitHubMgr.CancelOrganizationInvitation(options.ID)
-					} else if options.Cancel && options.Email != "" {
+						return
+					}
+					if options.Cancel && options.Email != "" {
 						gitHubMgr.CancelOrganizationInvitationByEmail(options.Email)
+						return
+					}
+				}
+			}
+		case "add":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "member" {
+					if options.Team != "" && options.Username != "" && options.Role != "" {
+						gitHubMgr.AddOrUpdateTeamMembershipUsername(options.Team, options.Role, options.Username)
+						return
+					}
+					if options.Team != "" && options.Email != "" && options.Role != "" {
+						gitHubMgr.AddOrUpdateTeamMembershipEmail(options.Team, options.Role, options.Email)
+						return
 					}
 				}
 			}
@@ -191,11 +207,12 @@ func main() {
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Username != "" && options.ORG {
 						gitHubMgr.RemoveOrganizationMember(options.Username)
-					} else if options.Username != "" && options.Team != "" {
-						gitHubMgr.RemoveTeamMembershipForUser(options.Team, options.Username)
+						return
 					}
-
-					//xxx
+					if options.Username != "" && options.Team != "" {
+						gitHubMgr.RemoveTeamMembershipForUser(options.Team, options.Username)
+						return
+					}
 					if len(os.Args) > 3 && os.Args[3] == "dormant" {
 						if options.File != "" {
 							gitHubMgr.RemoveDormantUsersFromCSV(options.Backup, options.File)

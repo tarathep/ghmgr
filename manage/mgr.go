@@ -805,6 +805,34 @@ func (mgr GitHubManager) RemoveDormantUsersFromCSV(backup bool, filename string)
 
 }
 
+func (mgr GitHubManager) RemoveOrganizationMemberExculdeTeamMembers() {
+	start := time.Now()
+
+	color.New(color.Italic).Print("Remove a members will exclude the members out of child teams.\nTo list members out a team and remove membership of Org.\n")
+
+	err, i := mgr.Organization.ListOrgMember()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	I := 0
+	for _, member := range i {
+		if mgr.Team.CheckMembershipOutOfTeamsCache(caches, member.Login) {
+			I++
+			mgr.removeOrganizationMember(caches, member.Login)
+		}
+
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
 func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 
 	color.New(color.Italic).Print("Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories\n")

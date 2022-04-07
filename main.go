@@ -135,6 +135,7 @@ func main() {
 					} else if options.ORG {
 						gitHubMgr.ListTeamMembers("")
 					}
+
 				}
 			}
 		case "export":
@@ -212,6 +213,10 @@ func main() {
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Username != "" && options.ORG {
 						gitHubMgr.RemoveOrganizationMember(options.Username)
+						return
+					}
+					if options.ORG && options.Exclude == "team" {
+						gitHubMgr.RemoveOrganizationMemberExculdeTeamMembers()
 						return
 					}
 					if options.Username != "" && options.Team != "" {

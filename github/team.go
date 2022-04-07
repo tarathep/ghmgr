@@ -320,7 +320,7 @@ func (team Team) MembershipOfTeamsCache(caches []model.Cache, username string) [
 func (team Team) CheckMembershipOutOfTeamsCache(caches []model.Cache, username string) bool {
 	for _, c := range caches {
 		if c.Username == username {
-			if c.Team == "" {
+			if c.Team == "" && c.Username != "" {
 				return true
 			}
 		}

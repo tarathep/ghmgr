@@ -21,6 +21,34 @@ type GitHubManager struct {
 	Version string
 }
 
+func (mgr GitHubManager) GetUsernameFromEmail(email string) {
+	color.New(color.Italic).Print("Get Username from email\n")
+
+	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	if username := mgr.User.EmailToUsername(caches, email); username != "" {
+		color.New(color.FgCyan).Println(username)
+		return
+	}
+	color.New(color.FgYellow).Println("Not Found")
+}
+
+func (mgr GitHubManager) GetEmailFromUsername(username string) {
+	color.New(color.Italic).Print("Get Email from Username\n")
+	_, usr := mgr.UserInfo(username)
+
+	if usr.Email != "" {
+		color.New(color.FgCyan).Println(usr.Email)
+		return
+	}
+	color.New(color.FgYellow).Println("Not Found")
+}
+
 // https://docs.github.com/en/rest/reference/teams#get-team-membership-for-a-user
 func (mgr GitHubManager) CheckTeamMembershipForUser(teamName string, username string) {
 	color.New(color.Italic).Print("Get team membership for a user\nTeam members will include the members of child teams.\nTo get a user's membership with a team, the team must be visible to the authenticated user.\n")

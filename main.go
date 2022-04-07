@@ -230,6 +230,24 @@ func main() {
 					}
 				}
 			}
+		case "get":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "member" {
+					if len(os.Args) > 3 && os.Args[3] == "username" {
+						if options.Email != "" {
+							gitHubMgr.GetUsernameFromEmail(options.Email)
+							return
+						}
+					}
+					if len(os.Args) > 3 && os.Args[3] == "email" {
+						if options.Username != "" {
+							gitHubMgr.GetEmailFromUsername(options.Username)
+							return
+						}
+					}
+				}
+			}
 		}
+
 	}
 }

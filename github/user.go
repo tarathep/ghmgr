@@ -34,6 +34,14 @@ func (user User) EmailToUsername(caches []model.Cache, email string) string {
 	}
 	return ""
 }
+func (user User) UsernameToEmail(caches []model.Cache, username string) string {
+	for _, c := range caches {
+		if c.Username == username {
+			return c.Email
+		}
+	}
+	return ""
+}
 func (user User) CheckAlreadyMemberByEmail(caches []model.Cache, email string) bool {
 	for _, c := range caches {
 		if c.Email == email {

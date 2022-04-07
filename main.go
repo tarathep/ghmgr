@@ -168,15 +168,20 @@ func main() {
 
 				}
 			}
+		case "import":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "template" {
+					if options.File != "" {
+						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
+						return
+					}
+				}
+			}
 		case "invite":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Team != "" && options.Email != "" {
 						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
-						return
-					}
-					if options.File != "" {
-						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
 						return
 					}
 					if options.Cancel && options.ID != "" {

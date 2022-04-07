@@ -195,9 +195,123 @@ for the file workspace in : ```report/input/dormant-users-report-xxxxxx.csv```
 ghmgr list member dormant --file dormant-users-report-xxxxxx.csv
 ```
 
+---
+
+## Invite Member
+
+### Invite member single command
+
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+```-e,--email``` email
+
+```bash
+ghmgr invite member --team [teamname] --email name@domain.com
+```
+
+
+
+### Invite Team Member via CSV Template
+
+**option**
+
+```-f,--file``` file name
+
+```bash
+ghmgr invite member -f filename.csv
+```
+
+---
+
+## Add
+
+### Add or Update Membership of Team with Username
+
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+```-u,--username``` GitHub username
+
+```-r,--role``` Role of Team (maintainer, member)
+
+```bash
+ghmgr add member --team [teamname] --email [name@domain.com] -r maintainer
+```
+
+### Add or Update Membership of Team with Email
+
+must load cache and add verify email account before use this cmd.
+
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+```-m,--email``` email (verify)
+
+```-r,--role``` Role of Team (maintainer, member)
+
+```bash
+ghmgr add member --team [teamname] --email [name@domain.com] -r maintainer
+```
+
+
+---
+
+## Export
+
+### Export Team Member to CSV
+
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+
+```bash
+ghmgr export member --team [teamname]
+```
+
+
+
+---
 
 
 ## Remove
+
+### Remove Team Membership For User
+
+To remove a membership between a user and a team (without Organization)
+
+
+**option**
+
+```-t,--team``` teamname (slug team name lowercase)
+
+```-u,--username``` GitHub username
+
+```bash
+ghmgr remove member --team [teamname] --username [username]
+```
+
+### Remove Membership of Organization 
+
+Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories
+
+
+**option**
+
+```-o,--org``` organization
+
+```-u,--username``` GitHub username
+
+```bash
+ghmgr remove member --org --username [username]
+```
+
+
+
 
 ### Remove dormant users of the organization from CSV file
 
@@ -213,46 +327,5 @@ ghmgr remove member dormant --file dormant-users-report-xxxx.csv --backup
 
 the backup file output into report/output/dormant-users-report-xxxxxx.csv-review-xxxx.csv
 
-## -------------------- Write Continue...
-
-## Invite Member
-
-### Invite member single command
-
-**option**
-
-```-t,--team``` team name (team in GitHub)
-
-```-e,--email``` email
-
-```-r,--role``` role of team (maintainer/ member)
-
-```bash
-ghmgr invite member --team [teamname] --email mail@domain.com --role member
-```
-
-### Invite Team Member via CSV Template
-
-**option**
-
-```-f,--file``` file name
-
-```bash
-ghmgr invite member -f filename.csv
-```
-
-## Export
-
-### Export Team Member to CSV Template
-
-**option**
-
-```-t,--team``` team name (team in GitHub)
-
-
-```bash
-ghmgr export member --team [teamname]
-```
-
-
+---
 

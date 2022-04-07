@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/fatih/color"
@@ -274,20 +273,21 @@ func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName s
 
 	if mgr.User.CheckAlreadyMemberByEmail(caches, email) {
 		color.New(color.FgHiMagenta).Println("Already Exist")
-	} else {
-
-		//color.New(color.FgHiGreen).Println("Done")
-
-		teamID := mgr.Team.GetInfoTeam(teamName).ID
-
-		if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
-			color.New(color.FgHiRed).Println("Error ", err.Error())
-			os.Exit(1)
-		} else {
-			color.New(color.FgHiGreen).Println("Done")
-		}
-
+		return
 	}
+
+	teamID := mgr.Team.GetInfoTeam(teamName).ID
+
+	if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
+		color.New(color.FgHiRed).Println("Error ", err.Error())
+		os.Exit(1)
+	}
+
+	caches = append(caches, model.Cache{Email: email})
+	mgr.SetCache("cache/cache.csv", caches)
+
+	color.New(color.FgHiGreen).Println("Done")
+
 }
 
 func (mgr GitHubManager) AddOrUpdateTeamMembershipUsername(teamName string, role string, username string) {
@@ -398,8 +398,10 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 
 				mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
 			}
+		} else if csvTempl.GitHub == "N" && csvTempl.GitHubUsername != "" {
+			//reject out to team when N
+			mgr.removeTeamMembershipForUser(proj, csvTempl.GitHubUsername)
 		}
-
 	}
 }
 
@@ -617,6 +619,17 @@ func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude
 func (mgr GitHubManager) CancelOrganizationInvitationByEmail(email string) {
 	color.New(color.Italic).Println("Cancel an organization invitation. In order to cancel an organization invitation, the authenticated user must be an organization owner.")
 
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	mgr.cancelOrganizationInvitationByEmail(caches, email)
+
+}
+
+func (mgr GitHubManager) cancelOrganizationInvitationByEmail(caches []model.Cache, email string) {
 	color.New(color.FgYellow).Print("Cancel invitation Email [" + email + "] : ")
 
 	if err, invitationID := mgr.Organization.InviteEmailToInviteID(email); err != nil {
@@ -627,10 +640,17 @@ func (mgr GitHubManager) CancelOrganizationInvitationByEmail(email string) {
 			color.New(color.FgHiRed).Println("ERROR ", err)
 			os.Exit(1)
 		} else {
+			var cs []model.Cache
+			for _, c := range caches {
+				if (c.Email != email) && c.Username != "" {
+					cs = append(cs, c)
+				}
+			}
+			mgr.SetCache("cache/cache.csv", cs)
+
 			color.New(color.FgHiGreen).Println("Done")
 		}
 	}
-
 }
 
 func (mgr GitHubManager) CancelOrganizationInvitation(invitationID string) {
@@ -788,15 +808,57 @@ func (mgr GitHubManager) RemoveDormantUsersFromCSV(backup bool, filename string)
 func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 
 	color.New(color.Italic).Print("Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories\n")
+
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	mgr.removeOrganizationMember(caches, username)
+}
+func (mgr GitHubManager) removeOrganizationMember(caches []model.Cache, username string) {
+	color.New(color.FgHiRed).Print(username, " removing an organization : ")
+
 	if err := mgr.Organization.RemoveOrganizationMember(username); err != nil {
 		color.New(color.FgHiRed).Println("ERROR ", err)
 		os.Exit(1)
 	}
-	color.New(color.FgHiRed).Print(username, " was removed an organization")
+	err, info := mgr.User.UserInfo(username)
+	if err != nil {
+		color.New(color.FgHiRed).Println("ERROR ", err)
+		os.Exit(1)
+	}
+
+	var cs []model.Cache
+	if info.Email == "" {
+		for i, c := range caches {
+			if c.Username != username {
+				println(i, c.Username, c.Email)
+				cs = append(cs, c)
+			}
+		}
+	} else {
+		for i, c := range caches {
+			if c.Email != info.Email {
+				println(i, c.Username, c.Email)
+				cs = append(cs, c)
+			}
+		}
+	}
+
+	//save
+	mgr.SetCache("cache/cache.csv", cs)
+
+	color.New(color.FgHiGreen).Println(" Done")
 }
 
 func (mgr GitHubManager) RemoveTeamMembershipForUser(teamname, username string) {
 	color.New(color.Italic).Print("To remove a membership between a user and a team, the authenticated user must have 'admin' permissions to the team or be an owner of the organization that the team is associated with. Removing team membership does not delete the user, it just removes their membership from the team.\n")
+	mgr.removeTeamMembershipForUser(teamname, username)
+}
+
+func (mgr GitHubManager) removeTeamMembershipForUser(teamname, username string) {
 	color.New(color.FgHiRed).Print(username, " removing a "+teamname+" team :")
 	if err := mgr.Team.RemoveTeamMembershipForUser(teamname, username); err != nil {
 		color.New(color.FgRed).Println(err.Error())
@@ -844,12 +906,8 @@ func (mgr GitHubManager) ExportTeamMemberCache() {
 		os.Exit(1)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(teams))
-
 	color.New(color.FgHiCyan).Print("Caching Membership of Teams : ")
 	for _, team := range teams {
-		defer wg.Done()
 		var cache []model.Cache
 		for i, teamMember := range mgr.Team.ListTeamMember(team.Slug, "") {
 			cache = append(cache, model.Cache{
@@ -860,7 +918,6 @@ func (mgr GitHubManager) ExportTeamMemberCache() {
 				Team:     team.Slug,
 			})
 		}
-		// color.New(color.FgHiCyan).Print(".")
 		mgr.SetCache("cache/teams/"+team.Slug+".csv", cache)
 	}
 	color.New(color.FgHiGreen).Print("Done\n")

@@ -264,11 +264,30 @@ func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName s
 
 func (mgr GitHubManager) AddOrUpdateTeamMembershipUsername(teamName string, role string, username string) {
 	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
-	mgr.AddOrUpdateTeamMembership("", teamName, role, username)
+	mgr.AddOrUpdateTeamMembership(nil, "", teamName, role, username)
+}
+func (mgr GitHubManager) AddOrUpdateTeamMembershipEmail(teamName string, role string, email string) {
+	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
+
+	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	mgr.AddOrUpdateTeamMembership(caches, email, teamName, role, "")
 }
 
-func (mgr GitHubManager) AddOrUpdateTeamMembership(email string, teamName string, role string, username string) {
+func (mgr GitHubManager) AddOrUpdateTeamMembership(caches []model.Cache, email string, teamName string, role string, username string) {
 
+	if email != "" && username == "" {
+		username = mgr.User.EmailToUsername(caches, email)
+		if username == "" {
+			color.New(color.FgYellow).Println("Email " + email + " Not Found in GitHub account or load Cache Please check again!")
+			os.Exit(1)
+		}
+	}
 	fmt.Printf(" %40s\t%20s\t%20s\t%20s : ", email, teamName, username, role)
 
 	err, _ := mgr.AddOrUpdateTeamMembershipForAUser(username, teamName, role)
@@ -344,7 +363,7 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 				I++
 				fmt.Print(I, "\t")
 
-				mgr.AddOrUpdateTeamMembership(csvTempl.Email, proj, csvTempl.GitHubTeamRole, csvTempl.GitHubUsername)
+				mgr.AddOrUpdateTeamMembership(caches, csvTempl.Email, proj, csvTempl.GitHubTeamRole, csvTempl.GitHubUsername)
 			} else if csvTempl.Email != "" {
 				I++
 				fmt.Print(I, "\t")

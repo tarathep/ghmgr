@@ -175,6 +175,8 @@ func main() {
 						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
 					} else if options.Team != "" && options.Username != "" && options.Role != "" {
 						gitHubMgr.AddOrUpdateTeamMembershipUsername(options.Team, options.Role, options.Username)
+					} else if options.Team != "" && options.Email != "" && options.Role != "" {
+						gitHubMgr.AddOrUpdateTeamMembershipEmail(options.Team, options.Role, options.Email)
 					} else if options.File != "" {
 						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
 					} else if options.Cancel && options.ID != "" {

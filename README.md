@@ -197,7 +197,7 @@ ghmgr list member dormant --file dormant-users-report-xxxxxx.csv
 
 ---
 
-## Invite Member
+## Invite
 
 ### Invite member single command
 
@@ -213,14 +213,14 @@ ghmgr invite member --team [teamname] --email name@domain.com
 
 
 
-### Invite Team Member via CSV Template
+### Cancel Organization Invitation
 
 **option**
 
-```-f,--file``` file name
+```-c,--cancel``` Cancel
 
 ```bash
-ghmgr invite member -f filename.csv
+ghmgr invite member --cancel --email name@domain.com
 ```
 
 ---
@@ -256,23 +256,6 @@ must load cache and add verify email account before use this cmd.
 ```bash
 ghmgr add member --team [teamname] --email [name@domain.com] -r maintainer
 ```
-
-
----
-
-## Export
-
-### Export Team Member to CSV
-
-**option**
-
-```-t,--team``` team name (team in GitHub)
-
-
-```bash
-ghmgr export member --team [teamname]
-```
-
 
 
 ---
@@ -317,6 +300,8 @@ ghmgr remove member --org --username [username]
 
 for the file workspace in : ```report/input/dormant-users-report-xxxxxx.csv```
 
+**option**
+
 ```-f,--file``` filename.csv
 
 ```-b,--backup``` the backup file for review
@@ -328,4 +313,37 @@ ghmgr remove member dormant --file dormant-users-report-xxxx.csv --backup
 the backup file output into report/output/dormant-users-report-xxxxxx.csv-review-xxxx.csv
 
 ---
+
+## Import
+
+### Import & Invite or Update Team Member from CSV Template
+
+must load cache and add verify email account before use this cmd.
+
+**Attention** 
+
+- the template can update but support who configured email address at profile (email don’t empty)
+
+- the Project Name must lowercase only we use slug GitHub Team name (seem team url link https://github.com/orgs/owner-org/teams/team-name) e.g.  “Team Name” => “team-name“ 
+
+- focus at GitHub column when
+    - Y is active then do
+        - GitHub Username is empty will be invite member using email
+        - GitHub Username already but outside ORG or already in another team will be update into member team (calculate 1 license)
+
+    - N is active when
+        - GitHub Username already and then will be removed from the team but still in ORG
+
+    - Empty is not active
+
+
+the file input template in : ```reports/input/team-name.csv```
+
+**option**
+
+```-f,--file``` team name (team in GitHub)
+
+```bash
+ghmgr import template --file team-name.csv
+```
 

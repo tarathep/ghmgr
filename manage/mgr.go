@@ -265,10 +265,7 @@ func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, role strin
 		os.Exit(1)
 	}
 
-	mgr.InviteMemberToCorpTeam(caches, teamName, role, email)
-}
-
-func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName string, role string, email string) {
+	// Invite member
 	fmt.Printf(" %40s\t%20s : ", email, teamName)
 
 	if mgr.User.CheckAlreadyMemberByEmail(caches, email) {
@@ -288,7 +285,31 @@ func (mgr GitHubManager) InviteMemberToCorpTeam(caches []model.Cache, teamName s
 
 	color.New(color.FgHiGreen).Println("Done")
 
+	//mgr.inviteMemberToCorpTeam(caches, teamName, role, email)
+
 }
+
+// func (mgr GitHubManager) inviteMemberToCorpTeam(caches []model.Cache, teamName string, role string, email string) bool {
+// 	fmt.Printf(" %40s\t%20s : ", email, teamName)
+
+// 	if mgr.User.CheckAlreadyMemberByEmail(caches, email) {
+// 		color.New(color.FgHiMagenta).Println("Already Exist")
+// 		return true
+// 	}
+
+// 	teamID := mgr.Team.GetInfoTeam(teamName).ID
+
+// 	if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
+// 		color.New(color.FgHiRed).Println("Error ", err.Error())
+// 		os.Exit(1)
+// 	}
+
+// 	caches = append(caches, model.Cache{Email: email})
+// 	mgr.SetCache("cache/cache.csv", caches)
+
+// 	color.New(color.FgHiGreen).Println("Done")
+
+// }
 
 func (mgr GitHubManager) AddOrUpdateTeamMembershipUsername(teamName string, role string, username string) {
 	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
@@ -328,33 +349,6 @@ func (mgr GitHubManager) AddOrUpdateTeamMembership(caches []model.Cache, email s
 
 }
 
-// Deprecated templates
-func (mgr GitHubManager) InviteMemberToCorpTeamCSV(fileName string) {
-
-	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
-
-	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
-
-	templ := csv.Template{}
-
-	err, proj, csvTemplate := templ.ReadFile(fileName)
-	if err != nil {
-		color.New(color.FgHiRed).Println(err.Error())
-		os.Exit(1)
-	}
-
-	for i, csvTempl := range csvTemplate {
-		fmt.Print((i + 1), "\t")
-
-		mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
-	}
-}
-
 func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 
 	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
@@ -382,6 +376,8 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 		os.Exit(1)
 	}
 
+	teamID := mgr.Team.GetInfoTeam(proj).ID
+
 	I := 0
 
 	for _, csvTempl := range csvTemplate {
@@ -396,13 +392,32 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 				I++
 				fmt.Print(I, "\t")
 
-				mgr.InviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
+				// new Invite member via email
+				fmt.Printf(" %40s\t%20s : ", csvTempl.Email, proj)
+
+				if mgr.User.CheckAlreadyMemberByEmail(caches, csvTempl.Email) {
+					color.New(color.FgHiMagenta).Println("Already Exist")
+					continue
+				}
+
+				//Invite API
+				if err := mgr.Organization.InviteToCorpTeam(csvTempl.Email, "direct_member", teamID); err != nil {
+					color.New(color.FgHiRed).Println("Error ", err.Error())
+					os.Exit(1)
+				}
+
+				caches = append(caches, model.Cache{Email: csvTempl.Email})
+
+				color.New(color.FgHiGreen).Println("Done")
+
+				//mgr.inviteMemberToCorpTeam(caches, proj, "direct_member", csvTempl.Email)
 			}
 		} else if csvTempl.GitHub == "N" && csvTempl.GitHubUsername != "" {
 			//reject out to team when N
 			mgr.removeTeamMembershipForUser(proj, csvTempl.GitHubUsername)
 		}
 	}
+	mgr.SetCache("cache/cache.csv", caches)
 }
 
 func (mgr GitHubManager) ShowListTeamMemberPending(teamName string) {
@@ -860,16 +875,14 @@ func (mgr GitHubManager) removeOrganizationMember(caches []model.Cache, username
 
 	var cs []model.Cache
 	if info.Email == "" {
-		for i, c := range caches {
+		for _, c := range caches {
 			if c.Username != username {
-				println(i, c.Username, c.Email)
 				cs = append(cs, c)
 			}
 		}
 	} else {
-		for i, c := range caches {
+		for _, c := range caches {
 			if c.Email != info.Email {
-				println(i, c.Username, c.Email)
 				cs = append(cs, c)
 			}
 		}

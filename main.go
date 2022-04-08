@@ -140,13 +140,13 @@ func main() {
 			}
 		case "export":
 			{
-				if len(os.Args) > 2 && os.Args[2] == "member" {
-					if len(os.Args) > 3 && os.Args[3] == "template" {
-						if options.Team != "" {
-							gitHubMgr.ExportCSVMemberTeamTemplate(options.Team)
-							return
-						}
+				if len(os.Args) > 2 && os.Args[2] == "template" {
+					if options.Team != "" {
+						gitHubMgr.ExportCSVMemberTeamTemplate(options.Team)
+						return
 					}
+				}
+				if len(os.Args) > 2 && os.Args[2] == "member" {
 
 					if len(os.Args) > 3 && os.Args[3] == "dormant" {
 						if options.File != "" {

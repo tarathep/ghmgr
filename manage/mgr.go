@@ -559,7 +559,6 @@ func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
 	for _, csvTempl := range csvTemplates {
 		if !mgr.User.CheckEmailInList(emails, csvTempl.Email) && csvTempl.Email != "" {
 			I++
-			fmt.Println(I, csvTempl.Email)
 
 			dataset = append(dataset, model.ProjectMemberListTemplate{
 				No:                strconv.Itoa(I),
@@ -569,8 +568,8 @@ func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
 				Role:              csvTempl.Role,
 				SubscriptionOwner: csvTempl.SubscriptionOwner,
 				GitHubUsername:    csvTempl.GitHubUsername,
-				GitHubTeamRole:    csvTempl.Role,
-				GitHub:            csvTempl.Role,
+				GitHubTeamRole:    csvTempl.GitHubTeamRole,
+				GitHub:            csvTempl.GitHub,
 				AzureDEV:          csvTempl.AzureDEV,
 				AzurePRD:          csvTempl.AzurePRD,
 				ELK:               csvTempl.ELK,

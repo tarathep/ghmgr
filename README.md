@@ -1,6 +1,44 @@
 # GHMGR : GitHub Manager 1.1.0
 Support GitHub Enterprise/Organize management GitHub APIs tools 
 
+***Features v1.1.0***
+
+- [Load](#load)
+  - Init Cache (for the improve performance and query must init before use in the first time)
+
+- [List](#list)
+  - List Team in Organization
+  - List Membership of Teams
+  - List member in team
+  - List member in team status pending
+  - List member in team role
+  - List member in team Email
+  - List member in team Exclude another team
+  - List member in CSV file
+  - List member of Organization
+  - List member of Organization Show Email , Teams
+  - List Dormant users of the organization from CSV file
+- [Invite](#invite)
+  - Invite member single command
+  - Cancel Organization Invitation
+- [Add](#add)
+  - Add or Update Membership of Team with Username
+  - Add or Update Membership of Team with Email
+- [Remove](#remove)
+  - Remove Team Membership For User
+  - Remove Membership of Organization
+  - Remove dormant users of the organization from CSV file
+- [Import](#import)
+  - Import & Invite or Update Team Member from CSV Template
+- [Export](#export)
+  - Export or Update Team Member to CSV Template
+- [Check](#check)
+  - Check Team Membership for User
+  - Check Membership for User in ORG
+- [Get](#get)
+  - Get GitHub Username from Email
+  - Get Primary Email from GitHub Username
+
 
 ## Installation
 

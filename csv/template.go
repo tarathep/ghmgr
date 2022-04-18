@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -24,7 +25,12 @@ func (Template) ReadFile(filename string) (err error, project string, csvlist []
 	for i, record := range records {
 		switch i {
 		case 0:
-			project = record[1]
+			reg, err := regexp.Compile("[^A-Za-z0-9]+")
+			if err != nil {
+				log.Fatal(err)
+			}
+			newStr := reg.ReplaceAllString(record[1], "-")
+			project = strings.TrimSuffix(strings.TrimPrefix(strings.ToLower(newStr), "-"), "-")
 		case 1:
 		default:
 			csv := model.CSV{
@@ -32,7 +38,7 @@ func (Template) ReadFile(filename string) (err error, project string, csvlist []
 				MemberName:     record[1],
 				Email:          record[2],
 				Role:           record[3],
-				GitHubTeamRole: record[4],
+				GitHubTeamRole: strings.ToLower(record[4]),
 				GitHubUser:     record[5]}
 
 			//COMMANT SKIPLINE
@@ -161,7 +167,11 @@ func (Template) ReadProjectMemberListTemplateCSV(name string) (err error, projec
 	for i, record := range records {
 		switch i {
 		case 0:
-			project = record[1]
+			reg, err := regexp.Compile("[^A-Za-z0-9]+")
+			if err != nil {
+				log.Fatal(err)
+			}
+			project = strings.TrimSuffix(strings.TrimPrefix(strings.ToLower(reg.ReplaceAllString(record[1], "-")), "-"), "-")
 		case 1:
 		default:
 			csv := model.ProjectMemberListTemplate{
@@ -172,7 +182,7 @@ func (Template) ReadProjectMemberListTemplateCSV(name string) (err error, projec
 				Role:              record[4],
 				SubscriptionOwner: record[5],
 				GitHubUsername:    record[6],
-				GitHubTeamRole:    record[7],
+				GitHubTeamRole:    strings.ToLower(record[7]),
 				GitHub:            record[8],
 				AzureDEV:          record[9],
 				AzurePRD:          record[10],
@@ -208,6 +218,9 @@ func (Template) WriteProjectMemberListTemplateCSV(team string, header string, na
 
 	//prepare dataset
 	for _, d := range dataset {
+		if d.Email == "" {
+			d.Email = "verify email"
+		}
 		data = append(data, []string{d.No, d.Username, d.Fullname, d.Email, d.Role, d.SubscriptionOwner, d.GitHubUsername, d.GitHubTeamRole, d.GitHub, d.AzureDEV, d.AzurePRD, d.ELK, d.Jumphost})
 	}
 

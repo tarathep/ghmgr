@@ -556,6 +556,7 @@ func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
 			})
 		}
 	}
+
 	for _, csvTempl := range csvTemplates {
 		if !mgr.User.CheckEmailInList(emails, csvTempl.Email) && csvTempl.Email != "" {
 			I++

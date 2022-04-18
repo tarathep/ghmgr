@@ -195,7 +195,7 @@ for the file workspace in : ```report/input/dormant-users-report-xxxxxx.csv```
 ghmgr list member dormant --file dormant-users-report-xxxxxx.csv
 ```
 
----
+
 
 ## Invite
 
@@ -223,7 +223,7 @@ ghmgr invite member --team [teamname] --email name@domain.com
 ghmgr invite member --cancel --email name@domain.com
 ```
 
----
+
 
 ## Add
 
@@ -258,7 +258,7 @@ ghmgr add member --team [teamname] --email [name@domain.com] -r maintainer
 ```
 
 
----
+
 
 
 ## Remove
@@ -312,7 +312,7 @@ ghmgr remove member dormant --file dormant-users-report-xxxx.csv --backup
 
 the backup file output into report/output/dormant-users-report-xxxxxx.csv-review-xxxx.csv
 
----
+
 
 ## Import
 
@@ -341,9 +341,97 @@ the file input template in : ```reports/input/team-name.csv```
 
 **option**
 
-```-f,--file``` team name (team in GitHub)
+```-f,--file``` file name.csv (team in GitHub)
 
 ```bash
 ghmgr import template --file team-name.csv
 ```
+
+
+
+## Export
+
+### Export or Update Team Member to CSV Template
+
+must load cache and add verify email account before use this cmd.
+
+**Attention** 
+
+- the template can update but support who configured email address at profile (email don’t empty)
+
+- the Project Name must lowercase only we use slug GitHub Team name (seem team url link https://github.com/orgs/owner-org/teams/team-name) e.g.  “Team Name” => “team-name“ 
+
+- focus at GitHub column when
+    - Y is active then do
+        - GitHub Username is empty will be invite member using email
+        - GitHub Username already but outside ORG or already in another team will be update into member team (calculate 1 license)
+
+    - N is active when
+        - GitHub Username already and then will be removed from the team but still in ORG
+
+    - Empty is not active
+
+
+the file output template in : ```reports/output/team-name.csvxxx.csv```
+
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+```bash
+ghmgr export template --team team-name
+```
+
+
+
+
+## Check
+
+### Check Team Membership for User 
+
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+```-u,--username``` github username
+
+```bash
+ghmgr check member --team [team-name] --username [username]
+```
+
+### Check Membership for User in ORG
+
+**option**
+
+```-u,--username``` github username
+
+```bash
+ghmgr check member --username [username]
+```
+
+
+
+## Get
+
+### Get GitHub Username from Email
+
+**option**
+
+```-m,--email``` GitHub Email (Primary Email) 
+
+
+```bash
+ghmgr get member username --email name@domain.com
+```
+
+### Get Primary Email from GitHub Username
+
+**option**
+
+```-u,--username``` github username
+
+```bash
+ghmgr get member email --username [username]
+```
+
 

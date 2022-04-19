@@ -59,15 +59,14 @@ func main() {
 		// SET AUTH & CORP
 		auth := login.Auth{}
 
-		switch os.Args[1] {
-
-		}
-
 		auth.Token = auth.GetToken()
 		if auth.Token == "" {
 			auth.Token = options.Token
 		}
 		auth.Owner = auth.GetOwner()
+		if auth.Owner == "" {
+			auth.Owner = options.Owner
+		}
 
 		team := github.Team{Auth: auth, Owner: auth.Owner}
 		organization := github.Organization{Auth: auth, Owner: auth.Owner}

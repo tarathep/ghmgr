@@ -82,7 +82,7 @@ or on pipeline you can use option --token recommand for secret
 example
 
 ```bash
-ghmgr list member -t teamname --token php_xxxxxxxxxxxxxxxxxx
+ghmgr list member -t teamname --token php_xxxxxxxxxxxxxxxxxx --owner corp-xxx
 ```
 
 

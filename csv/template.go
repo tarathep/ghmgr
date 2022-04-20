@@ -289,13 +289,13 @@ func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error 
 		fmt.Println(data)
 	}
 
-	for _, value := range data {
+	// for _, value := range data {
 
-		err := writer.Write(value)
-		if err != nil {
-			log.Panic(err)
-		}
-	}
+	// 	err := writer.Write(value)
+	// 	if err != nil {
+	// 		log.Panic(err)
+	// 	}
+	// }
 
 	defer writer.Flush()
 	defer file.Close()

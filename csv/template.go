@@ -271,55 +271,55 @@ func (Template) ReadDormantCSV(name string) (err error, dormantUsers []model.Dor
 func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error {
 
 	time := time.Now().Format("20060102150405")
-	name = strings.TrimSpace("name.csv" + "-review-" + time + ".csv")
+	name = strings.TrimSpace(name + "-review-" + time + ".csv")
 
-	rows := [][]string{
-		{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
-	}
-
-	csvfile, err := os.Create("reports/output/" + name)
-
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-
-	csvwriter := csv.NewWriter(csvfile)
-
-	for _, row := range rows {
-		_ = csvwriter.Write(row)
-	}
-
-	csvwriter.Flush()
-
-	csvfile.Close()
-
-	// file, err := os.Create(name)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer file.Close()
-
-	// //writer := csv.NewWriter(file)
-
-	// var data = [][]string{
+	// rows := [][]string{
 	// 	{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
 	// }
 
-	// for _, d := range dataset {
+	// csvfile, err := os.Create("reports/output/" + name)
 
-	// 	data = append(data, []string{d.CreateAt, d.ID, d.Login, d.Role, d.Suspended, d.LastLoggedIP, d.Dormant, d.LastActive, d.TwoFAEnabled, d.Teams, d.Excepted})
-	// 	fmt.Println(data)
+	// if err != nil {
+	// 	log.Fatalf("failed creating file: %s", err)
 	// }
 
-	// // for _, value := range data {
+	// csvwriter := csv.NewWriter(csvfile)
 
-	// // 	err := writer.Write(value)
-	// // 	if err != nil {
-	// // 		log.Panic(err)
-	// // 	}
-	// // }
+	// for _, row := range rows {
+	// 	_ = csvwriter.Write(row)
+	// }
 
-	// // defer writer.Flush()
+	// csvwriter.Flush()
+
+	// csvfile.Close()
+
+	file, err := os.Create(name)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+
+	var data = [][]string{
+		{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
+	}
+
+	for _, d := range dataset {
+
+		data = append(data, []string{d.CreateAt, d.ID, d.Login, d.Role, d.Suspended, d.LastLoggedIP, d.Dormant, d.LastActive, d.TwoFAEnabled, d.Teams, d.Excepted})
+
+	}
+
+	for _, value := range data {
+
+		err := writer.Write(value)
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	defer writer.Flush()
 
 	return nil
 }

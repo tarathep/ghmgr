@@ -278,7 +278,7 @@ func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error 
 		{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
 	}
 	fmt.Println(name)
-	csvfile, err := os.Create("xxx.csv")
+	csvfile, err := os.Create(name)
 
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)

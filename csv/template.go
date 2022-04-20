@@ -269,8 +269,8 @@ func (Template) ReadDormantCSV(name string) (err error, dormantUsers []model.Dor
 }
 
 func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error {
-	time := time.Now().Format("20060102150405")
-	file, err := os.Create(name + "-review-" + time + ".csv")
+	//time := time.Now().Format("20060102150405")
+	file, err := os.Create(name + "-review-" + "" + ".csv")
 	if err != nil {
 		return err
 	}

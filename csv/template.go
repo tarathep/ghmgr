@@ -269,6 +269,28 @@ func (Template) ReadDormantCSV(name string) (err error, dormantUsers []model.Dor
 }
 
 func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error {
+	rows := [][]string{
+		{"Name", "City", "Language"},
+		{"Pinky", "London", "Python"},
+		{"Nicky", "Paris", "Golang"},
+		{"Micky", "Tokyo", "Php"},
+	}
+
+	csvfile, err := os.Create("test.csv")
+
+	if err != nil {
+		log.Fatalf("failed creating file: %s", err)
+	}
+
+	csvwriter := csv.NewWriter(csvfile)
+
+	for _, row := range rows {
+		_ = csvwriter.Write(row)
+	}
+
+	csvwriter.Flush()
+
+	csvfile.Close()
 
 	// time := time.Now().Format("20060102150405")
 	// name = name + "-review-" + time + ".csv"

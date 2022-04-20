@@ -271,11 +271,13 @@ func (Template) ReadDormantCSV(name string) (err error, dormantUsers []model.Dor
 
 func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error {
 	time := time.Now().Format("20060102150405")
+	name = name + "-review-" + time + ".csv"
 
-	file, err := os.Create(name + "-review-" + time + ".csv")
+	file, err := os.Create(name)
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	//writer := csv.NewWriter(file)
 
@@ -298,7 +300,6 @@ func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error 
 	// }
 
 	// defer writer.Flush()
-	defer file.Close()
 
 	return nil
 }

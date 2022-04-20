@@ -2,7 +2,6 @@ package csv
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -271,13 +270,15 @@ func (Template) ReadDormantCSV(name string) (err error, dormantUsers []model.Dor
 
 func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error {
 
-	time := time.Now().Format("20060102150405")
-	name = strings.TrimSpace(name + "-review-" + time + ".csv")
+	//time := time.Now().Format("20060102150405")
+	//name = strings.TrimSpace(name + "-review-" + time + ".csv")
+
+	name = "reports/output/dormant-users-report-20220404.csv-review-20220420042553.csv"
 
 	rows := [][]string{
 		{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
 	}
-	fmt.Println(name)
+
 	csvfile, err := os.Create(name)
 
 	if err != nil {

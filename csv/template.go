@@ -273,7 +273,7 @@ func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error 
 	//time := time.Now().Format("20060102150405")
 	//name = strings.TrimSpace(name + "-review-" + time + ".csv")
 
-	name = "reports/output/dormant.csv"
+	name = "./reports/output/dormant.csv"
 
 	rows := [][]string{
 		{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},

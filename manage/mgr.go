@@ -763,12 +763,13 @@ func (mgr GitHubManager) ExportDormantUsersToCSV(filename string) {
 			Excepted:     dormantUser.Excepted,
 		})
 	}
+	fmt.Println(dataset)
 
-	result := csv.Template{}.WriteDormantCSV("reports/output/"+filename, dataset)
-	if result != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	// result := csv.Template{}.WriteDormantCSV("reports/output/"+filename, dataset)
+	// if result != nil {
+	// 	color.New(color.FgRed).Println(err.Error())
+	// 	os.Exit(1)
+	// }
 	color.New(color.FgHiGreen).Println("Done")
 }
 

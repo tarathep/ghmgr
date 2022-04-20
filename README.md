@@ -1,7 +1,7 @@
-# GHMGR : GitHub Manager 1.1.0
+# GHMGR : GitHub Manager 1.1.x
 Support GitHub Enterprise/Organize management GitHub APIs tools 
 
-***Features v1.1.0***
+***Features***
 
 - [Load](#load)
   - Init Cache (for the improve performance and query must init before use in the first time)

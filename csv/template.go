@@ -2,7 +2,6 @@ package csv
 
 import (
 	"encoding/csv"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
@@ -270,36 +269,56 @@ func (Template) ReadDormantCSV(name string) (err error, dormantUsers []model.Dor
 }
 
 func (Template) WriteDormantCSV(name string, dataset []model.DormantUser) error {
-	time := time.Now().Format("20060102150405")
-	name = name + "-review-" + time + ".csv"
-
 	file, err := os.Create(name)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	//writer := csv.NewWriter(file)
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
 
 	var data = [][]string{
-		{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
+		{"No", "ID", "Username", "Email", "Team"},
 	}
 
-	for _, d := range dataset {
-
-		data = append(data, []string{d.CreateAt, d.ID, d.Login, d.Role, d.Suspended, d.LastLoggedIP, d.Dormant, d.LastActive, d.TwoFAEnabled, d.Teams, d.Excepted})
-		fmt.Println(data)
+	for _, value := range data {
+		err := writer.Write(value)
+		if err != nil {
+			log.Panic(err)
+		}
 	}
 
-	// for _, value := range data {
+	// time := time.Now().Format("20060102150405")
+	// name = name + "-review-" + time + ".csv"
 
-	// 	err := writer.Write(value)
-	// 	if err != nil {
-	// 		log.Panic(err)
-	// 	}
+	// file, err := os.Create(name)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer file.Close()
+
+	// //writer := csv.NewWriter(file)
+
+	// var data = [][]string{
+	// 	{"created_at", "id", "login", "role", "suspended?", "last_logged_ip", "dormant?", "last_active", "2fa_enabled?", "teams", "excepted"},
 	// }
 
-	// defer writer.Flush()
+	// for _, d := range dataset {
+
+	// 	data = append(data, []string{d.CreateAt, d.ID, d.Login, d.Role, d.Suspended, d.LastLoggedIP, d.Dormant, d.LastActive, d.TwoFAEnabled, d.Teams, d.Excepted})
+	// 	fmt.Println(data)
+	// }
+
+	// // for _, value := range data {
+
+	// // 	err := writer.Write(value)
+	// // 	if err != nil {
+	// // 		log.Panic(err)
+	// // 	}
+	// // }
+
+	// // defer writer.Flush()
 
 	return nil
 }

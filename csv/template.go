@@ -202,7 +202,7 @@ func (Template) ReadProjectMemberListTemplateCSV(name string) (err error, projec
 
 func (Template) WriteProjectMemberListTemplateCSV(team string, header string, name string, dataset []model.ProjectMemberListTemplate) error {
 	time := time.Now().Format("20060102150405")
-	file, err := os.Create(name + "-" + time + ".csv")
+	file, err := os.Create(name + ".csv")
 	if err != nil {
 		return err
 	}

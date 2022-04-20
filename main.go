@@ -30,7 +30,7 @@ type Options struct {
 	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
 }
 
-const version string = "v1.1.1"
+const version string = "v1.2.1"
 
 func main() {
 

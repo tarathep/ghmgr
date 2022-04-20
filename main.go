@@ -30,17 +30,14 @@ type Options struct {
 	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
 }
 
-const version string = "v1.1.0"
+const version string = "v1.1.1"
 
 func main() {
 
-	// teamID := team.GetInfoTeam("ipfm").ID
-	// fmt.Print(teamID)
-
-	// team.GetRepoList("myChannel")
-
-	// team.AddnewTeamInAnotherRepoTeam("corp-ais", "IBM", "myChannel", "admin")
-	// role string, teamName string, owner string, repoName string
+	// Init Directory
+	os.Mkdir("reports", 0755)
+	os.Mkdir("reports/input", 0755)
+	os.Mkdir("reports/output", 0755)
 
 	//--- Options Flags ---
 	var options Options

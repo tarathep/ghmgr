@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -504,9 +505,27 @@ func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
 
 }
 
+func (mgr GitHubManager) ExportCSVMemberTeamTemplates() {
+
+	err, teams := mgr.Team.ListTeams()
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	for i, team := range teams {
+
+		if _, err := os.Stat("reports/input/" + team.Slug + ".csv"); !errors.Is(err, os.ErrNotExist) {
+			fmt.Print(i+1, " : ")
+			mgr.ExportCSVMemberTeamTemplate(team.Slug)
+		}
+
+	}
+
+}
+
 //EXPORT..
 func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
-	start := time.Now()
 
 	color.New(color.Italic).Print("Export CSV Template Member Team [" + teamName + "] : ")
 	var dataset []model.ProjectMemberListTemplate
@@ -586,9 +605,6 @@ func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
 		os.Exit(1)
 	}
 	color.New(color.FgHiGreen).Print("Done\n")
-
-	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
-
 }
 
 func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude string) {
@@ -860,6 +876,7 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 
 	mgr.removeOrganizationMember(caches, username)
 }
+
 func (mgr GitHubManager) removeOrganizationMember(caches []model.Cache, username string) {
 	color.New(color.FgHiRed).Print(username, " removing an organization : ")
 

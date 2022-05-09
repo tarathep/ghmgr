@@ -30,7 +30,7 @@ type Options struct {
 	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
 }
 
-const version string = "v1.2.1"
+const version string = "v1.3.1"
 
 func main() {
 
@@ -137,10 +137,16 @@ func main() {
 		case "export":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "template" {
+					if options.Team == "all" {
+						gitHubMgr.ExportCSVMemberTeamTemplates()
+						return
+					}
+
 					if options.Team != "" {
 						gitHubMgr.ExportCSVMemberTeamTemplate(options.Team)
 						return
 					}
+
 				}
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 

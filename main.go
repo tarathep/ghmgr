@@ -213,6 +213,7 @@ func main() {
 		case "remove":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
+
 					if options.Username != "" && options.ORG {
 						gitHubMgr.RemoveOrganizationMember(options.Username)
 						return
@@ -221,6 +222,12 @@ func main() {
 						gitHubMgr.RemoveOrganizationMemberExculdeTeamMembers()
 						return
 					}
+					if options.ORG {
+						//remove all with condition email = null and team null
+						gitHubMgr.RemoveOrganizationMembers()
+						return
+					}
+
 					if options.Username != "" && options.Team != "" {
 						gitHubMgr.RemoveTeamMembershipForUser(options.Team, options.Username)
 						return

@@ -836,6 +836,7 @@ func (mgr GitHubManager) RemoveDormantUsersFromCSV(backup bool, filename string)
 
 }
 
+//?
 func (mgr GitHubManager) RemoveOrganizationMemberExculdeTeamMembers() {
 	start := time.Now()
 
@@ -857,7 +858,7 @@ func (mgr GitHubManager) RemoveOrganizationMemberExculdeTeamMembers() {
 	for _, member := range i {
 		if mgr.Team.CheckMembershipOutOfTeamsCache(caches, member.Login) {
 			I++
-			mgr.removeOrganizationMember(caches, member.Login)
+			mgr.removeOrganizationMember(member.Login)
 		}
 
 	}
@@ -868,45 +869,38 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 
 	color.New(color.Italic).Print("Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories\n")
 
+	mgr.removeOrganizationMember(username)
+}
+
+func (mgr GitHubManager) RemoveOrganizationMembers() {
+	start := time.Now()
+	color.New(color.Italic).Print("Removing a users from Oranization in Condition with Email is Empty or Team is Null\n")
+
 	err, caches := mgr.GetCache("./cache/cache.csv")
 	if err != nil {
 		color.New(color.FgRed).Println(err.Error())
 		os.Exit(1)
 	}
 
-	mgr.removeOrganizationMember(caches, username)
+	i := 0
+	//check email empty and team null
+	for _, c := range caches {
+		if c.Email == "" || c.Team == "" {
+			i++
+			fmt.Print(i, " : ")
+			mgr.removeOrganizationMember(c.Username)
+		}
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
-func (mgr GitHubManager) removeOrganizationMember(caches []model.Cache, username string) {
+func (mgr GitHubManager) removeOrganizationMember(username string) {
 	color.New(color.FgHiRed).Print(username, " removing an organization : ")
 
 	if err := mgr.Organization.RemoveOrganizationMember(username); err != nil {
 		color.New(color.FgHiRed).Println("ERROR ", err)
 		os.Exit(1)
 	}
-	err, info := mgr.User.UserInfo(username)
-	if err != nil {
-		color.New(color.FgHiRed).Println("ERROR ", err)
-		os.Exit(1)
-	}
-
-	var cs []model.Cache
-	if info.Email == "" {
-		for _, c := range caches {
-			if c.Username != username {
-				cs = append(cs, c)
-			}
-		}
-	} else {
-		for _, c := range caches {
-			if c.Email != info.Email {
-				cs = append(cs, c)
-			}
-		}
-	}
-
-	//save
-	mgr.SetCache("cache/cache.csv", cs)
 
 	color.New(color.FgHiGreen).Println(" Done")
 }

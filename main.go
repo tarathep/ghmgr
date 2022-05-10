@@ -174,6 +174,10 @@ func main() {
 		case "import":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "template" {
+					if options.File == "all" {
+						gitHubMgr.InviteMemberToCorpTeamTemplateCSVs()
+						return
+					}
 					if options.File != "" {
 						gitHubMgr.InviteMemberToCorpTeamTemplateCSV(options.File)
 						return
@@ -284,6 +288,5 @@ func main() {
 				}
 			}
 		}
-
 	}
 }

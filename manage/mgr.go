@@ -3,6 +3,8 @@ package manage
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -350,8 +352,29 @@ func (mgr GitHubManager) AddOrUpdateTeamMembership(caches []model.Cache, email s
 
 }
 
-func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
+func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSVs() {
+	color.New(color.Italic).Print("Create an organization invitation from input template files. \n")
 
+	//load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	//get list file name
+	files, err := ioutil.ReadDir("reports/input/")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files {
+		fmt.Println(file.Name(), " : ")
+		mgr.inviteMemberToCorpTeamTemplateCSV(caches, file.Name())
+	}
+}
+
+func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
 
 	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
@@ -360,6 +383,11 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 		color.New(color.FgRed).Println(err.Error())
 		os.Exit(1)
 	}
+
+	mgr.inviteMemberToCorpTeamTemplateCSV(caches, fileName)
+}
+
+func (mgr GitHubManager) inviteMemberToCorpTeamTemplateCSV(caches []model.Cache, fileName string) {
 
 	templ := csv.Template{}
 
@@ -870,6 +898,28 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 	color.New(color.Italic).Print("Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories\n")
 
 	mgr.removeOrganizationMember(username)
+}
+
+func (mgr GitHubManager) RemoveOrganizationMembersWithoutTeam() {
+	start := time.Now()
+	color.New(color.Italic).Print("Removing a users from Oranization in Condition with Team is Null\n")
+
+	err, caches := mgr.GetCache("./cache/cache.csv")
+	if err != nil {
+		color.New(color.FgRed).Println(err.Error())
+		os.Exit(1)
+	}
+
+	i := 0
+
+	for _, c := range caches {
+		if c.Team == "" {
+			i++
+			fmt.Print(i, " : ")
+			mgr.removeOrganizationMember(c.Username)
+		}
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
 func (mgr GitHubManager) RemoveOrganizationMembers() {

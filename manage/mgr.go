@@ -843,6 +843,48 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutTeam() {
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
+func (mgr GitHubManager) RemoveOrganizationMembersWithoutMembershipOfTeams() {
+	start := time.Now()
+	color.New(color.Italic).Print("Removing a users from Oranization without membership of teams\n")
+
+	i := 0
+	//check team null
+	for _, c := range mgr.loadCache() {
+		if c.Team == "" {
+			i++
+			fmt.Print(i, " : ")
+			color.New(color.FgHiRed).Print(c.Username, " removing an organization : ")
+			color.New(color.FgHiMagenta).Println(" Done")
+
+			//mgr.removeOrganizationMember(c.Username)
+
+		}
+	}
+
+	//BACKUP REMOVE USER..
+
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
+func (mgr GitHubManager) RemoveOrganizationMembersWithoutEmail() {
+	start := time.Now()
+	color.New(color.Italic).Print("Removing a users from Oranization without Email\n")
+
+	i := 0
+	//check email empty
+	for _, c := range mgr.loadCache() {
+		if c.Email == "" {
+			i++
+			fmt.Print(i, " : ")
+			color.New(color.FgHiRed).Print(c.Username, " removing an organization : ")
+			color.New(color.FgHiMagenta).Println(" Done")
+			//mgr.removeOrganizationMember(c.Username)
+
+		}
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
 func (mgr GitHubManager) RemoveOrganizationMembers() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization in Condition with Email is Empty or Team is Null\n")

@@ -201,6 +201,12 @@ func main() {
 					}
 				}
 			}
+		case "create":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "team" {
+					//==>
+				}
+			}
 		case "add":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
@@ -226,9 +232,20 @@ func main() {
 						gitHubMgr.RemoveOrganizationMemberExculdeTeamMembers()
 						return
 					}
+
+					if options.ORG && options.Team == "null" {
+						gitHubMgr.RemoveOrganizationMembersWithoutMembershipOfTeams()
+						return
+					}
+
+					if options.ORG && options.Email == "null" {
+						gitHubMgr.RemoveOrganizationMembersWithoutEmail()
+						return
+					}
+
 					if options.ORG {
 						//remove all with condition email = null and team null
-						gitHubMgr.RemoveOrganizationMembers()
+						//gitHubMgr.RemoveOrganizationMembers()
 						return
 					}
 

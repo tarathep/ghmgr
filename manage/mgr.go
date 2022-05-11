@@ -23,17 +23,20 @@ type GitHubManager struct {
 	Version string
 }
 
-func (mgr GitHubManager) GetUsernameFromEmail(email string) {
-	color.New(color.Italic).Print("Get Username from email\n")
-
-	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
+func (mgr GitHubManager) loadCache() []model.Cache {
 	err, caches := mgr.GetCache("./cache/cache.csv")
 	if err != nil {
 		color.New(color.FgRed).Println(err.Error())
 		os.Exit(1)
 	}
+	return caches
+}
 
-	if username := mgr.User.EmailToUsername(caches, email); username != "" {
+func (mgr GitHubManager) GetUsernameFromEmail(email string) {
+	color.New(color.Italic).Print("Get Username from email\n")
+
+	if username := mgr.User.EmailToUsername(mgr.loadCache(), email); username != "" {
 		color.New(color.FgCyan).Println(username)
 		return
 	}
@@ -126,11 +129,7 @@ func (mgr GitHubManager) ListTeamMembers(option string) {
 		os.Exit(1)
 	}
 	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	for i, member := range i {
 		switch option {
@@ -231,7 +230,6 @@ func (mgr GitHubManager) ReadCSVFile(fileName string) {
 	}
 }
 
-//WORKING...
 func (mgr GitHubManager) ReadProjectMemberListTemplateCSV(fileName string) {
 
 	templ := csv.Template{}
@@ -255,18 +253,14 @@ func (mgr GitHubManager) ReadProjectMemberListTemplateCSV(fileName string) {
 	}
 }
 
-func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, role string, email string) {
+func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, email string) {
 	color.New(color.Italic).Print("Create an organization invitation assign to [" + teamName + "] team. (org support member only) \n")
 
 	//MEMBER ONLY!!
-	role = "direct_member"
+	const role string = "direct_member"
 
 	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	// Invite member
 	fmt.Printf(" %40s\t%20s : ", email, teamName)
@@ -287,46 +281,18 @@ func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, role strin
 	mgr.SetCache("cache/cache.csv", caches)
 
 	color.New(color.FgHiGreen).Println("Done")
-
-	//mgr.inviteMemberToCorpTeam(caches, teamName, role, email)
-
 }
-
-// func (mgr GitHubManager) inviteMemberToCorpTeam(caches []model.Cache, teamName string, role string, email string) bool {
-// 	fmt.Printf(" %40s\t%20s : ", email, teamName)
-
-// 	if mgr.User.CheckAlreadyMemberByEmail(caches, email) {
-// 		color.New(color.FgHiMagenta).Println("Already Exist")
-// 		return true
-// 	}
-
-// 	teamID := mgr.Team.GetInfoTeam(teamName).ID
-
-// 	if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
-// 		color.New(color.FgHiRed).Println("Error ", err.Error())
-// 		os.Exit(1)
-// 	}
-
-// 	caches = append(caches, model.Cache{Email: email})
-// 	mgr.SetCache("cache/cache.csv", caches)
-
-// 	color.New(color.FgHiGreen).Println("Done")
-
-// }
 
 func (mgr GitHubManager) AddOrUpdateTeamMembershipUsername(teamName string, role string, username string) {
 	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
 	mgr.AddOrUpdateTeamMembership(nil, "", teamName, role, username)
 }
+
 func (mgr GitHubManager) AddOrUpdateTeamMembershipEmail(teamName string, role string, email string) {
 	color.New(color.Italic).Print("Add or update team membership for a user or Create an organization invitation assign to [" + teamName + "] team. \nAdds an organization member to a team., An authenticated organization owner or team maintainer can add organization members to a team. \n")
 
 	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	mgr.AddOrUpdateTeamMembership(caches, email, teamName, role, "")
 }
@@ -349,20 +315,12 @@ func (mgr GitHubManager) AddOrUpdateTeamMembership(caches []model.Cache, email s
 	}
 
 	color.New(color.FgHiGreen).Println("Done")
-
 }
 
 func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSVs() {
 	color.New(color.Italic).Print("Create an organization invitation from input template files. \n")
 
-	//load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
-
-	//get list file name
+	//get list fie name
 	files, err := ioutil.ReadDir("reports/input/")
 	if err != nil {
 		log.Fatal(err)
@@ -370,21 +328,13 @@ func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSVs() {
 
 	for _, file := range files {
 		fmt.Println(file.Name(), " : ")
-		mgr.inviteMemberToCorpTeamTemplateCSV(caches, file.Name())
+		mgr.inviteMemberToCorpTeamTemplateCSV(mgr.loadCache(), file.Name())
 	}
 }
 
 func (mgr GitHubManager) InviteMemberToCorpTeamTemplateCSV(fileName string) {
 	color.New(color.Italic).Print("Create an organization invitation from [" + fileName + "] file. \n")
-
-	// load cache (GITHUB NOT SUPPROT API ,SO WE USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
-
-	mgr.inviteMemberToCorpTeamTemplateCSV(caches, fileName)
+	mgr.inviteMemberToCorpTeamTemplateCSV(mgr.loadCache(), fileName)
 }
 
 func (mgr GitHubManager) inviteMemberToCorpTeamTemplateCSV(caches []model.Cache, fileName string) {
@@ -501,11 +451,7 @@ func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
 
 	var dataset []model.TeamMemberReport
 
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	I := 0
 
@@ -526,11 +472,10 @@ func (mgr GitHubManager) ExportCSVMemberTeam(teamName string) {
 	result := csv.WriteTeamMemberReport(teamName, "Report membership of team Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-"+teamName, dataset)
 
 	if result != nil {
-		color.New(color.FgRed).Println(err.Error())
+		color.New(color.FgRed).Println(result.Error())
 		os.Exit(1)
 	}
 	color.New(color.FgHiGreen).Print("Done\n")
-
 }
 
 func (mgr GitHubManager) ExportCSVMemberTeamTemplates() {
@@ -549,21 +494,15 @@ func (mgr GitHubManager) ExportCSVMemberTeamTemplates() {
 		}
 
 	}
-
 }
 
-//EXPORT..
 func (mgr GitHubManager) ExportCSVMemberTeamTemplate(teamName string) {
 
 	color.New(color.Italic).Print("Export CSV Template Member Team [" + teamName + "] : ")
 	var dataset []model.ProjectMemberListTemplate
 
 	//Load Cache for get info
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	//LOAD Templ
 	templ := csv.Template{}
@@ -641,11 +580,7 @@ func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude
 	color.New(color.Italic).Print("Export CSV Member Team [" + teamName + "] Exclude Team [" + teamExclude + "] : ")
 	var dataset []model.TeamMemberReport
 
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	I := 0
 
@@ -666,7 +601,7 @@ func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude
 	result := csv.WriteTeamMemberReport(teamName, "Report membership of team Generated by GHMGR "+mgr.Version+" : ", "reports/output/report-members-of-"+teamName, dataset)
 
 	if result != nil {
-		color.New(color.FgRed).Println(err.Error())
+		color.New(color.FgRed).Println(result.Error())
 		os.Exit(1)
 	}
 	color.New(color.FgHiGreen).Print("Done\n")
@@ -678,11 +613,7 @@ func (mgr GitHubManager) ExportCSVMemberTeamExclude(teamName string, teamExclude
 func (mgr GitHubManager) CancelOrganizationInvitationByEmail(email string) {
 	color.New(color.Italic).Println("Cancel an organization invitation. In order to cancel an organization invitation, the authenticated user must be an organization owner.")
 
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	mgr.cancelOrganizationInvitationByEmail(caches, email)
 
@@ -876,11 +807,7 @@ func (mgr GitHubManager) RemoveOrganizationMemberExculdeTeamMembers() {
 		os.Exit(1)
 	}
 
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	I := 0
 	for _, member := range i {
@@ -904,15 +831,9 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutTeam() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization in Condition with Team is Null\n")
 
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
-
 	i := 0
 
-	for _, c := range caches {
+	for _, c := range mgr.loadCache() {
 		if c.Team == "" {
 			i++
 			fmt.Print(i, " : ")
@@ -926,15 +847,9 @@ func (mgr GitHubManager) RemoveOrganizationMembers() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization in Condition with Email is Empty or Team is Null\n")
 
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
-
 	i := 0
 	//check email empty and team null
-	for _, c := range caches {
+	for _, c := range mgr.loadCache() {
 		if c.Email == "" || c.Team == "" {
 			i++
 			fmt.Print(i, " : ")
@@ -1083,11 +998,7 @@ func (mgr GitHubManager) ListExculdeTeamMembers() {
 		os.Exit(1)
 	}
 	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	I := 0
 	for _, member := range i {
@@ -1114,11 +1025,7 @@ func (mgr GitHubManager) ExportORGMemberReport() {
 		os.Exit(1)
 	}
 	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	var dataset []model.OrgMemberReport
 	for i, member := range i {
@@ -1158,11 +1065,7 @@ func (mgr GitHubManager) ExportORGMemberWithOutMembershipOfTeamReport() {
 		os.Exit(1)
 	}
 	// load cache (GITHUB NOT SUPPROT API SO ,USE CACHE FOR IMPROVE PERFORMANCE)
-	err, caches := mgr.GetCache("./cache/cache.csv")
-	if err != nil {
-		color.New(color.FgRed).Println(err.Error())
-		os.Exit(1)
-	}
+	caches := mgr.loadCache()
 
 	I := 0
 	var dataset []model.OrgMemberReport

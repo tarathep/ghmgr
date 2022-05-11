@@ -114,7 +114,7 @@ func main() {
 					}
 
 					if options.File != "" {
-						//gitHubMgr.ReadCSVFile(options.File)
+						// gitHubMgr.ReadCSVFile(options.File)
 						gitHubMgr.ReadProjectMemberListTemplateCSV(options.File)
 					}
 
@@ -188,7 +188,7 @@ func main() {
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if options.Team != "" && options.Email != "" {
-						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Role, options.Email)
+						gitHubMgr.InviteMemberToCorpTeamEmail(options.Team, options.Email)
 						return
 					}
 					if options.Cancel && options.ID != "" {

@@ -34,9 +34,6 @@ type Options struct {
 const version string = "v1.4.1"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
-Support Commands
-- login : Login GitHub Personal Token
-
 `
 
 func main() {

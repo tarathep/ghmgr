@@ -1,9 +1,19 @@
 # GHMGR : GitHub Manager v.1.4.1 (latest)
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools 
 
+
+![](https://github.com/tarathep/ghmgr/actions/workflows/autobuild.yaml/badge.svg)
+[![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
+[![macOS](https://svgshare.com/i/ZjP.svg)](https://svgshare.com/i/ZjP.svg)
+[![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
+
+
+![](./program.png)
+
 ***Update***
 - support new command export all template
 - add remove org member in condition : without membership of team(s), not verify email
+- remove membership of team without email don't verify email or public email isn't appear.
 
 ***Features***
 
@@ -321,6 +331,21 @@ To remove a membership between a user and a team (without Organization)
 ghmgr remove member --team [teamname] --username [username]
 ```
 
+### Remove Membership of Team Without Email
+
+To remove a membership between a user and a team (without Organization) focus public Email isn't appear.
+
+**option**
+
+```-t,--team``` teamname (slug team name lowercase)
+```-m null,--email null``` email only null
+
+```bash
+ghmgr remove member -t [teamename] -m null
+```
+
+
+
 ### Remove Membership of Organization 
 
 Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories
@@ -334,6 +359,18 @@ Removing a user from this list will remove them from all teams and they will no 
 
 ```bash
 ghmgr remove member --org --username [username]
+```
+
+### Remove Organization Members Without Membership of Teams
+
+**option**
+
+```-o,--org``` organization
+
+```-t null,--team null``` null only
+
+```bash
+ghmgr remove member -o -t null
 ```
 
 

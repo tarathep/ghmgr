@@ -1,5 +1,9 @@
-# GHMGR : GitHub Manager 1.1.x
-Support GitHub Enterprise/Organize management GitHub APIs tools 
+# GHMGR : GitHub Manager v.1.4.1 (latest)
+CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools 
+
+***Update***
+- support new command export all template
+- add remove org member in condition : without membership of team(s), not verify email
 
 ***Features***
 
@@ -28,6 +32,7 @@ Support GitHub Enterprise/Organize management GitHub APIs tools
   - Remove Team Membership For User
   - Remove Membership of Organization
   - Remove dormant users of the organization from CSV file
+  - Remove Membership of Organization without membership of team and verify email
 - [Import](#import)
   - Import & Invite or Update Team Member from CSV Template
 - [Export](#export)

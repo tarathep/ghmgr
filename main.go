@@ -233,19 +233,22 @@ func main() {
 						return
 					}
 
+					// ghmgr remove member -o -t null
 					if options.ORG && options.Team == "null" {
 						gitHubMgr.RemoveOrganizationMembersWithoutMembershipOfTeams()
 						return
 					}
 
+					// ghmgr remove member -o -m null (not yet used)
 					if options.ORG && options.Email == "null" {
 						gitHubMgr.RemoveOrganizationMembersWithoutEmail()
 						return
 					}
 
-					if options.ORG {
-						//remove all with condition email = null and team null
-						//gitHubMgr.RemoveOrganizationMembers()
+					// ghmgr remove member -t [teamename] -m null
+					if options.Team != "" && options.Team != "null" && options.Email == "null" {
+						gitHubMgr.RemoveMembershipOfTeamWithoutEmail(options.Team)
+						//LOAD CAHCE FOR UPDATE
 						return
 					}
 

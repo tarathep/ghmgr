@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -827,6 +828,7 @@ func (mgr GitHubManager) RemoveOrganizationMember(username string) {
 	mgr.removeOrganizationMember(username)
 }
 
+// USE PLEASE CONERT !
 func (mgr GitHubManager) RemoveOrganizationMembersWithoutTeam() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization in Condition with Team is Null\n")
@@ -843,6 +845,7 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutTeam() {
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
+// USE PLEASE CONERT !
 func (mgr GitHubManager) RemoveOrganizationMembersWithoutMembershipOfTeams() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization without membership of teams\n")
@@ -853,10 +856,8 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutMembershipOfTeams() {
 		if c.Team == "" {
 			i++
 			fmt.Print(i, " : ")
-			color.New(color.FgHiRed).Print(c.Username, " removing an organization : ")
-			color.New(color.FgHiMagenta).Println(" Done")
 
-			//mgr.removeOrganizationMember(c.Username)
+			mgr.removeOrganizationMember(c.Username)
 
 		}
 	}
@@ -866,6 +867,31 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutMembershipOfTeams() {
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
+func (mgr GitHubManager) RemoveMembershipOfTeamWithoutEmail(team string) {
+	start := time.Now()
+	color.New(color.Italic).Print("Remove a membership of team don't verify email\n")
+
+	i := 0
+	for _, c := range mgr.loadCache() {
+		if c.Email == "" && isMembershipOfTeamInCache(c.Team, team) {
+			i++
+			fmt.Print(i, " : ")
+			mgr.removeTeamMembershipForUser(team, c.Username)
+		}
+	}
+	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
+func isMembershipOfTeamInCache(teamsString string, team string) bool {
+	for _, t := range strings.Split(teamsString, "|") {
+		if t == team {
+			return true
+		}
+	}
+	return false
+}
+
+// !
 func (mgr GitHubManager) RemoveOrganizationMembersWithoutEmail() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization without Email\n")
@@ -876,7 +902,8 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutEmail() {
 		if c.Email == "" {
 			i++
 			fmt.Print(i, " : ")
-			color.New(color.FgHiRed).Print(c.Username, " removing an organization : ")
+			// debug only
+			color.New(color.FgHiRed).Print(c.Username, " xx removing an organization : ")
 			color.New(color.FgHiMagenta).Println(" Done")
 			//mgr.removeOrganizationMember(c.Username)
 
@@ -895,7 +922,7 @@ func (mgr GitHubManager) RemoveOrganizationMembers() {
 		if c.Email == "" || c.Team == "" {
 			i++
 			fmt.Print(i, " : ")
-			mgr.removeOrganizationMember(c.Username)
+			//mgr.removeOrganizationMember(c.Username)
 		}
 	}
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))

@@ -28,9 +28,16 @@ type Options struct {
 	ID       string `long:"id" description:"ID for references such as GitHub ID, Personal etc."`
 	Dormant  string `short:"d" long:"dormant" description:"Dormant Users in ORG & Teams"`
 	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
+	Helps    bool   `long:"help" description:"help"`
 }
 
 const version string = "v1.4.1"
+const label string = `GHMGR GitHub Manager ` + version + `
+Repository : https://github.com/tarathep/ghmgr
+Support Commands
+- login : Login GitHub Personal Token
+
+`
 
 func main() {
 
@@ -50,6 +57,10 @@ func main() {
 
 	if options.Version {
 		fmt.Print(version)
+
+	}
+	if options.Helps {
+		fmt.Print(label)
 	}
 
 	if len(os.Args) > 1 {

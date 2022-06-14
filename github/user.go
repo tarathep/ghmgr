@@ -54,14 +54,18 @@ func (user User) CheckAlreadyMemberByEmail(caches []model.Cache, email string) b
 
 func (user User) CheckAlreadyMemberTeamByEmail(caches []model.Cache, email string, team string) bool {
 	for _, c := range caches {
-		if c.Email == email && isCacheTeamAlready(c.Team, team) {
+		if c.Email == email && isCacheTeamAlready(team, c.Team) {
 			return true
 		}
 	}
 	return false
 }
 func isCacheTeamAlready(team string, teams_string string) bool {
-	strings.Split(teams_string, "|")
+	for _, t := range strings.Split(teams_string, "|") {
+		if t == team {
+			return true
+		}
+	}
 	return false
 }
 

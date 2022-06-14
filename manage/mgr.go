@@ -256,6 +256,7 @@ func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, email stri
 	fmt.Printf(" %40s\t%20s : ", email, teamName)
 
 	if mgr.User.CheckAlreadyMemberTeamByEmail(caches, email, teamName) {
+
 		color.New(color.FgHiMagenta).Println("Already Exist")
 		return
 	}

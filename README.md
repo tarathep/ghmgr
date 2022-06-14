@@ -1,4 +1,4 @@
-# GHMGR : GitHub Manager v.1.5.1 (latest)
+# GHMGR : GitHub Manager v.1.5.2 (latest)
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools 
 
 
@@ -11,8 +11,9 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
 ![](./program.png)
 
 ***Update***
-- add feature caching invite to team for support template csv file
-- improved performance & sourcecode
+- fix bug check already exist member in Github before invitation.
+- add feature caching invite to team for support template csv file.
+- improved performance & source code.
 
 ***Features***
 

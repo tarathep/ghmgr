@@ -31,7 +31,7 @@ type Options struct {
 	Helps    bool   `long:"help" description:"help"`
 }
 
-const version string = "v1.5.1"
+const version string = "v1.5.2"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
 `

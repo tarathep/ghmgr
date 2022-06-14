@@ -3,6 +3,7 @@ package github
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/tarathep/ghmgr/login"
 	"github.com/tarathep/ghmgr/model"
@@ -48,6 +49,19 @@ func (user User) CheckAlreadyMemberByEmail(caches []model.Cache, email string) b
 			return true
 		}
 	}
+	return false
+}
+
+func (user User) CheckAlreadyMemberTeamByEmail(caches []model.Cache, email string, team string) bool {
+	for _, c := range caches {
+		if c.Email == email && isCacheTeamAlready(c.Team, team) {
+			return true
+		}
+	}
+	return false
+}
+func isCacheTeamAlready(team string, teams_string string) bool {
+	strings.Split(teams_string, "|")
 	return false
 }
 

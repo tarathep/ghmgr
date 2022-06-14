@@ -31,7 +31,7 @@ type Options struct {
 	Helps    bool   `long:"help" description:"help"`
 }
 
-const version string = "v1.4.1"
+const version string = "v1.5.1"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
 `
@@ -231,6 +231,11 @@ func main() {
 		case "remove":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
+					if len(os.Args) > 3 && os.Args[3] == "invited" {
+						if options.Team != "" && options.Email != "" {
+							gitHubMgr.RemoveMemberCachedInvited(options.Team, options.Email)
+						}
+					}
 
 					if options.Username != "" && options.ORG {
 						gitHubMgr.RemoveOrganizationMember(options.Username)
@@ -285,17 +290,39 @@ func main() {
 		case "load":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "cache" {
+					if len(os.Args) > 3 && os.Args[3] == "invite" {
+						if options.Team != "" {
+							gitHubMgr.CachePending(options.Team)
+						}
+						return
+					}
 					gitHubMgr.Caching()
+					return
 				}
+
 			}
 		case "check":
 			{
 				if len(os.Args) > 2 && os.Args[2] == "member" {
+					if len(os.Args) > 3 && os.Args[3] == "invited" {
+						if options.Team != "" && options.Email != "" {
+							if gitHubMgr.IsInvited(options.Team, options.Email, options.Username) {
+								fmt.Println("Invited")
+							} else {
+								fmt.Println("Not invited")
+								gitHubMgr.RemoveMemberCachedInvited(options.Team, options.Email)
+							}
+						}
+					}
+
 					if options.Username != "" && options.Team != "" {
 						gitHubMgr.CheckTeamMembershipForUser(options.Team, options.Username)
+						return
 					} else if options.Username != "" {
 						gitHubMgr.CheckOrganizationMembership(options.Username)
+						return
 					}
+
 				}
 			}
 		case "get":

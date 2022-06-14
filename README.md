@@ -1,4 +1,4 @@
-# GHMGR : GitHub Manager v.1.4.1 (latest)
+# GHMGR : GitHub Manager v.1.5.1 (latest)
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools 
 
 
@@ -11,14 +11,15 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
 ![](./program.png)
 
 ***Update***
-- support new command export all template
-- add remove org member in condition : without membership of team(s), not verify email
-- remove membership of team without email don't verify email or public email isn't appear.
+- add feature caching invite to team for support template csv file
+- improved performance & sourcecode
 
 ***Features***
 
 - [Load](#load)
   - Init Cache (for the improve performance and query must init before use in the first time)
+  - Load pending caching team on pending
+  - Support GitHub Action for implement workflows cronjob task (github.com/corp-ais/cdc-github-manager)
 
 - [List](#list)
   - List Team in Organization
@@ -50,6 +51,7 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
 - [Check](#check)
   - Check Team Membership for User
   - Check Membership for User in ORG
+  - Check member for invite to team
 - [Get](#get)
   - Get GitHub Username from Email
   - Get Primary Email from GitHub Username

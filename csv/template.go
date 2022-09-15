@@ -134,7 +134,7 @@ func (Template) ReadProjectMemberListTemplateCSV(name string) (err error, projec
 				AzurePRD:          record[10],
 				ELK:               record[11],
 				Jumphost:          record[12],
-				Bastion:           record[13],
+				// Bastion:           record[13],
 			}
 
 			//COMMANT SKIPLINE

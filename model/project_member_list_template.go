@@ -14,4 +14,5 @@ type ProjectMemberListTemplate struct {
 	AzurePRD          string
 	ELK               string
 	Jumphost          string
+	Bastion           string
 }

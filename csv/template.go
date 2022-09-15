@@ -134,6 +134,7 @@ func (Template) ReadProjectMemberListTemplateCSV(name string) (err error, projec
 				AzurePRD:          record[10],
 				ELK:               record[11],
 				Jumphost:          record[12],
+				Bastion:           record[13],
 			}
 
 			//COMMANT SKIPLINE
@@ -159,7 +160,7 @@ func (Template) WriteProjectMemberListTemplateCSV(team string, header string, na
 
 	var data = [][]string{
 		{"Project Name", team, header + time, "", "", "", "", "", "", "", "", "", ""},
-		{"No", "Username", "Full-Name", "AIS / Postbox Email", "Role", "Subscription owner", "GitHub Username", "GitHub Role", "GitHub", "Azure DEV", "Azure PRD", "ELK", "Jumphost"},
+		{"No", "Username", "Full-Name", "AIS / Postbox Email", "Role", "Subscription owner", "GitHub Username", "GitHub Role", "GitHub", "Azure DEV", "Azure PRD", "ELK", "Jumphost", "Bastion"},
 	}
 
 	//prepare dataset
@@ -167,7 +168,7 @@ func (Template) WriteProjectMemberListTemplateCSV(team string, header string, na
 		if d.Email == "" {
 			d.Email = "verify email"
 		}
-		data = append(data, []string{d.No, d.Username, d.Fullname, d.Email, d.Role, d.SubscriptionOwner, d.GitHubUsername, d.GitHubTeamRole, d.GitHub, d.AzureDEV, d.AzurePRD, d.ELK, d.Jumphost})
+		data = append(data, []string{d.No, d.Username, d.Fullname, d.Email, d.Role, d.SubscriptionOwner, d.GitHubUsername, d.GitHubTeamRole, d.GitHub, d.AzureDEV, d.AzurePRD, d.ELK, d.Jumphost, d.Bastion})
 	}
 
 	for _, value := range data {

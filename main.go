@@ -32,7 +32,7 @@ type Options struct {
 	Logging  bool   `short:"l" long:"logging" description:"Console log"`
 }
 
-const version string = "v1.5.2"
+const version string = "v1.6.2"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
 `
@@ -141,6 +141,15 @@ func main() {
 						gitHubMgr.ListTeamMembers("")
 					}
 
+				}
+			}
+		case "rewrite":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "template" {
+					if options.Team != "" {
+						gitHubMgr.RewriteTemplateFormat(options.Team)
+						return
+					}
 				}
 			}
 		case "export":

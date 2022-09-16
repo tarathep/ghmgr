@@ -1,4 +1,4 @@
-# GHMGR : GitHub Manager v.1.5.2 (latest)
+# GHMGR : GitHub Manager v.1.6.2 (latest)
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools 
 
 
@@ -49,10 +49,13 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
   - Import & Invite or Update Team Member from CSV Template
 - [Export](#export)
   - Export or Update Team Member to CSV Template
+- [Rewrite](#rewrite)
+  - Rewrite format before import or update team Member from CSV Template file
 - [Check](#check)
   - Check Team Membership for User
   - Check Membership for User in ORG
   - Check member for invite to team
+  - Check and verify csv template format
 - [Get](#get)
   - Get GitHub Username from Email
   - Get Primary Email from GitHub Username
@@ -465,8 +468,17 @@ the file output template in : ```reports/output/team-name.csvxxx.csv```
 ghmgr export template --team team-name
 ```
 
+## Rewrite
 
+### Rewrite format before import or update team Member from CSV Template file
 
+**option**
+
+```-t,--team``` team name (team in GitHub)
+
+```bash
+ghmgr rewrite template -t [teamname]
+```
 
 ## Check
 
@@ -490,6 +502,16 @@ ghmgr check member --team [team-name] --username [username]
 
 ```bash
 ghmgr check member --username [username]
+```
+
+### Check and Verify CSV format template
+
+**option**
+
+```-f,--file``` filename.csv
+
+```bash
+ghmgr check report -f [filename].csv
 ```
 
 

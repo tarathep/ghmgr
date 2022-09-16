@@ -1,6 +1,7 @@
 # GHMGR : GitHub Manager v.1.6.2 (latest)
-CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools 
+CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools
 
+** more feature may be support on private organization but you can customize.
 
 ![](https://github.com/tarathep/ghmgr/actions/workflows/autobuild.yaml/badge.svg)
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
@@ -11,9 +12,8 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
 ![](./program.png)
 
 ***Update***
-- fix bug check already exist member in Github before invitation.
-- add feature caching invite to team for support template csv file.
-- improved performance & source code.
+- add new feature check csv report template format that support enterpirse
+- add new feature rewrite format when format is wrong (business case).
 
 ***Features***
 
@@ -315,9 +315,6 @@ must load cache and add verify email account before use this cmd.
 ```bash
 ghmgr add member --team [teamname] --email [name@domain.com] -r maintainer
 ```
-
-
-
 
 
 ## Remove

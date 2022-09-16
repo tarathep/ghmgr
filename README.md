@@ -81,7 +81,7 @@ set GHMGR_OWNER=xxxxx
 PowerShell
 ```ps
 $env:GHMGR_TOKEN="php_xxxxxxxxxxxxxxxxxx"
-$env:GHMGR_OWNER="corp-ais"
+$env:GHMGR_OWNER="corp-xxx"
 ```
 
 

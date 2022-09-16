@@ -29,6 +29,7 @@ type Options struct {
 	Dormant  string `short:"d" long:"dormant" description:"Dormant Users in ORG & Teams"`
 	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
 	Helps    bool   `long:"help" description:"help"`
+	Logging  bool   `short:"l" long:"logging" description:"Console log"`
 }
 
 const version string = "v1.5.2"
@@ -303,6 +304,12 @@ func main() {
 			}
 		case "check":
 			{
+				if len(os.Args) > 2 && os.Args[2] == "report" {
+					if options.File != "" {
+						gitHubMgr.CheckTemplateFormat(options.Logging, options.File)
+						return
+					}
+				}
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if len(os.Args) > 3 && os.Args[3] == "invited" {
 						if options.Team != "" && options.Email != "" {
@@ -322,7 +329,6 @@ func main() {
 						gitHubMgr.CheckOrganizationMembership(options.Username)
 						return
 					}
-
 				}
 			}
 		case "get":

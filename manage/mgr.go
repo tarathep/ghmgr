@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +22,121 @@ type GitHubManager struct {
 	github.Organization
 	github.User
 	Version string
+}
+
+func LogError(raw interface{}, enable bool) {
+	if enable {
+		color.New(color.FgHiRed).Print(raw)
+	}
+}
+func LogSuccess(raw interface{}, enable bool) {
+	if enable {
+		color.New(color.FgHiGreen).Print(raw)
+	}
+}
+func LogInfo(raw interface{}, enable bool) {
+	if enable {
+		color.New(color.FgHiGreen).Print(raw)
+	}
+}
+func LogWarning(raw interface{}, enable bool) {
+	if enable {
+		color.New(color.FgHiYellow).Print(raw)
+	}
+}
+func LogDisable(raw interface{}, enable bool) {
+	if enable {
+		color.New(color.FgHiBlue).Print(raw)
+	}
+}
+
+func LogCustom(style color.Attribute, raw interface{}, enable bool) {
+	if enable {
+		color.New(style).Print(raw)
+	}
+}
+func LogPrint(enable bool, a interface{}) {
+	if enable {
+		fmt.Print(a)
+	}
+}
+
+func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool {
+	templ := csv.Template{}
+	err, proj, csvTemplate := templ.ReadProjectMemberListTemplateCSV("reports/input/" + fileName)
+	if err != nil {
+		LogError(err.Error(), logging)
+		os.Exit(1)
+	}
+
+	LogCustom(color.Italic, "Validating format "+proj+"csv template \n", logging)
+
+	result := true
+
+	for _, csvTempl := range csvTemplate {
+		LogPrint(logging, csvTempl.No+"\n")
+
+		if csvTempl.Fullname != "" && regexp.MustCompile(`^[a-zA-Z0-9 ]+$`).MatchString(csvTempl.Fullname) {
+			LogSuccess("(✓)", logging)
+		} else {
+			LogError("(X)", logging)
+			result = false
+		}
+		LogPrint(logging, " Name:"+csvTempl.Fullname+"\n")
+
+		if csvTempl.Email != "" && regexp.MustCompile(`^[a-zA-Z0-9@.]+$`).MatchString(csvTempl.Email) && !(regexp.MustCompile(`@hotmail|@gmail|@outlook|@live|@windowslive|@yahoo`).MatchString(csvTempl.Email)) {
+			LogSuccess("(✓)", logging)
+		} else {
+			LogError("(X)", logging)
+			result = false
+		}
+		LogPrint(logging, " Email:"+csvTempl.Email+"\n")
+
+		if csvTempl.GitHub == "Y" {
+			if csvTempl.GitHubUsername != "" {
+				if err, _ := mgr.Organization.CheckOrganizationMembership(csvTempl.GitHubUsername); err == nil {
+					LogSuccess("(✓)", logging)
+				} else {
+					LogError("(X)", logging)
+					result = false
+				}
+			} else {
+				LogWarning("(!)", logging)
+			}
+		} else {
+			LogDisable("(-)", logging)
+		}
+		LogPrint(logging, " GitHub Username:"+csvTempl.GitHubUsername+"\n")
+
+		if csvTempl.GitHub == "Y" {
+			if !(csvTempl.GitHubTeamRole == "maintainer" && csvTempl.Role == "member") {
+				LogSuccess("(✓)", logging)
+			} else {
+				LogError("(X)", logging)
+				result = false
+			}
+		} else {
+			LogDisable("(-)", logging)
+
+		}
+		LogPrint(logging, " GitHub Role:"+csvTempl.GitHubTeamRole+"\n")
+
+		if !(csvTempl.GitHub == "Y" && csvTempl.GitHub == "N") {
+			LogSuccess("(✓)", logging)
+		} else {
+			LogError("(X)", logging)
+			result = false
+		}
+		LogPrint(logging, " GitHub :"+csvTempl.GitHub+"\n")
+	}
+
+	color.New(color.Italic).Print("Format " + proj + ".csv have been validated : ")
+	if result {
+		color.New(color.FgHiGreen).Println("(✓)")
+		return true
+	}
+	color.New(color.FgHiRed).Print("(X)")
+	return false
 }
 
 func (mgr GitHubManager) GetUsernameFromEmail(email string) {
@@ -858,7 +974,7 @@ func (mgr GitHubManager) RemoveOrganizationMembersWithoutTeam() {
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
 }
 
-// USE PLEASE CONERT !
+// USE PLEASE CONCERT !
 func (mgr GitHubManager) RemoveOrganizationMembersWithoutMembershipOfTeams() {
 	start := time.Now()
 	color.New(color.Italic).Print("Removing a users from Oranization without membership of teams\n")

@@ -159,7 +159,7 @@ func (Template) WriteProjectMemberListTemplateCSV(team string, header string, na
 	defer writer.Flush()
 
 	var data = [][]string{
-		{"Project Name", team, header + time, "", "", "", "", "", "", "", "", "", ""},
+		{"Project Name", team, header + time, "", "", "", "", "", "", "", "", "", "", ""},
 		{"No", "Username", "Full-Name", "AIS / Postbox Email", "Role", "Subscription owner", "GitHub Username", "GitHub Role", "GitHub", "Azure DEV", "Azure PRD", "ELK", "Jumphost", "Bastion"},
 	}
 

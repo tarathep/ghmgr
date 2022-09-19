@@ -135,7 +135,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		color.New(color.FgHiGreen).Println("(✓)")
 		return true
 	}
-	color.New(color.FgHiRed).Print("(X)")
+	color.New(color.FgHiRed).Println("(X)")
 	return false
 }
 
@@ -156,11 +156,42 @@ func (mgr GitHubManager) RewriteTemplateFormat(teamName string) {
 		if csvTempl.Email != "verify email" {
 			I++
 
+			if csvTempl.Username == "" && csvTempl.Email != "" {
+				csvTempl.Username = strings.Split(csvTempl.Email, "@")[0]
+			}
+			if csvTempl.SubscriptionOwner == "" {
+				csvTempl.SubscriptionOwner = "-"
+			}
+			if err, _ := mgr.Organization.CheckOrganizationMembership(csvTempl.GitHubUsername); err != nil {
+				csvTempl.GitHubUsername = ""
+			}
+			if csvTempl.GitHubTeamRole != "maintainer" && csvTempl.GitHub == "Y" {
+				csvTempl.GitHubTeamRole = "member"
+			}
+			if csvTempl.GitHub != "Y" {
+				csvTempl.GitHub = "N"
+			}
+			if csvTempl.AzureDEV != "Y" {
+				csvTempl.AzureDEV = "N"
+			}
+			if csvTempl.AzurePRD != "Y" {
+				csvTempl.AzurePRD = "N"
+			}
+			if csvTempl.ELK != "Y" {
+				csvTempl.ELK = "N"
+			}
+			if csvTempl.Jumphost != "Y" {
+				csvTempl.Jumphost = "N"
+			}
+			if csvTempl.Bastion != "Y" {
+				csvTempl.Bastion = "N"
+			}
+
 			dataset = append(dataset, model.ProjectMemberListTemplate{
 				No:                strconv.Itoa(I),
 				Username:          csvTempl.Username,
 				Fullname:          csvTempl.Fullname,
-				Email:             csvTempl.Email,
+				Email:             strings.TrimSpace(csvTempl.Email),
 				Role:              csvTempl.Role,
 				SubscriptionOwner: csvTempl.SubscriptionOwner,
 				GitHubUsername:    csvTempl.GitHubUsername,

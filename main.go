@@ -315,7 +315,9 @@ func main() {
 			{
 				if len(os.Args) > 2 && os.Args[2] == "report" {
 					if options.File != "" {
-						gitHubMgr.CheckTemplateFormat(options.Logging, options.File)
+						if !gitHubMgr.CheckTemplateFormat(options.Logging, options.File) {
+							os.Exit(1)
+						}
 						return
 					}
 				}

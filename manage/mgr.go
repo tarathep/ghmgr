@@ -76,7 +76,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 	for _, csvTempl := range csvTemplate {
 		LogPrint(logging, csvTempl.No+"\n")
 
-		if csvTempl.Fullname != "" && regexp.MustCompile(`^[a-zA-Z0-9 ]+$`).MatchString(csvTempl.Fullname) {
+		if csvTempl.Fullname != "" && regexp.MustCompile(`^[a-zA-Z0-9. ]+$`).MatchString(csvTempl.Fullname) {
 			LogSuccess("(✓)", logging)
 		} else {
 			LogError("(X)", logging)

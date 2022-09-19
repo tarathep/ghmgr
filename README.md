@@ -1,4 +1,4 @@
-# GHMGR : GitHub Manager v.1.6.2 (latest)
+# GHMGR : GitHub Manager
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools
 
 ** more feature may be support on private organization but you can customize.

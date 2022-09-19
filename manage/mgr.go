@@ -157,7 +157,12 @@ func (mgr GitHubManager) RewriteTemplateFormat(teamName string) {
 			I++
 
 			if csvTempl.Username == "" && csvTempl.Email != "" {
-				csvTempl.Username = strings.Split(csvTempl.Email, "@")[0]
+				mail_content := strings.Split(csvTempl.Email, "@")
+				if mail_content[1] == "ais.co.th" {
+					csvTempl.Username = strings.Split(csvTempl.Email, "@")[0]
+				} else {
+					//Others not support please enter manual
+				}
 			}
 			if csvTempl.SubscriptionOwner == "" {
 				csvTempl.SubscriptionOwner = "-"

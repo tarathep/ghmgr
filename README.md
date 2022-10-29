@@ -1,4 +1,7 @@
 # GHMGR : GitHub Manager
+
+<img src="./Octocat.png">
+
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools
 
 ** more feature may be support on private organization but you can customize.

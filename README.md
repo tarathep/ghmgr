@@ -1,5 +1,15 @@
 # GHMGR : GitHub Manager
 
+
+
+
+
+<div align="center"><img src="./Octocat.png" width="50%"></div>
+
+CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools
+
+** more feature may be support on private organization but you can customize.
+
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/tarathep/ghmgr)
 ![GitHub](https://img.shields.io/github/license/tarathep/ghmgr?color=blue)
 
@@ -7,12 +17,6 @@
 [![Linux](https://svgshare.com/i/Zhy.svg)](https://svgshare.com/i/Zhy.svg)
 [![macOS](https://svgshare.com/i/ZjP.svg)](https://svgshare.com/i/ZjP.svg)
 [![Windows](https://svgshare.com/i/ZhY.svg)](https://svgshare.com/i/ZhY.svg)
-
-<p style="text-align: center;"><img src="./Octocat.png" width="50%"></p>
-
-CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools
-
-** more feature may be support on private organization but you can customize.
 
 ![](./program.png)
 

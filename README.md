@@ -21,8 +21,9 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
 ![](./program.png)
 
 ***Update***
-- add new feature check csv report template format that support enterpirse
-- add new feature rewrite format when format is wrong (business case).
+- add logging for validation csv template for debug when syntax error
+- fix csv support symbol dash "-" at field full-name
+- fix regex compile error on validation
 
 ***Features***
 

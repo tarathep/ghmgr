@@ -72,15 +72,20 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 	LogCustom(color.Italic, "Validating format "+proj+"csv template \n", logging)
 
 	result := true
+	check := false
+	err_result_list := ""
 
 	for _, csvTempl := range csvTemplate {
+		check = false
+
 		LogPrint(logging, csvTempl.No+"\n")
 
-		if csvTempl.Fullname != "" && regexp.MustCompile(`^[a-zA-Z0-9. ]+$`).MatchString(csvTempl.Fullname) {
+		if csvTempl.Fullname != "" && regexp.MustCompile(`^[a-zA-Z0-9.- ]+$`).MatchString(csvTempl.Fullname) {
 			LogSuccess("(✓)", logging)
 		} else {
 			LogError("(X)", logging)
 			result = false
+			check = false
 		}
 		LogPrint(logging, " Name:"+csvTempl.Fullname+"\n")
 
@@ -89,6 +94,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		} else {
 			LogError("(X)", logging)
 			result = false
+			check = false
 		}
 		LogPrint(logging, " Email:"+csvTempl.Email+"\n")
 
@@ -99,6 +105,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 				} else {
 					LogError("(X)", logging)
 					result = false
+					check = false
 				}
 			} else {
 				LogWarning("(!)", logging)
@@ -114,6 +121,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 			} else {
 				LogError("(X)", logging)
 				result = false
+				check = false
 			}
 		} else {
 			LogDisable("(-)", logging)
@@ -126,8 +134,10 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		} else {
 			LogError("(X)", logging)
 			result = false
+			check = false
 		}
 		LogPrint(logging, " GitHub :"+csvTempl.GitHub+"\n")
+		err_result_list += csvTempl.No + " "
 	}
 
 	color.New(color.Italic).Print("Format " + proj + ".csv have been validated : ")
@@ -136,6 +146,11 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		return true
 	}
 	color.New(color.FgHiRed).Println("(X)")
+
+	if check == false {
+		color.New(color.FgHiRed).Println("Error in line [ " + err_result_list + "]")
+	}
+
 	return false
 }
 

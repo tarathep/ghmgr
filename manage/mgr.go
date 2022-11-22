@@ -89,7 +89,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		}
 		LogPrint(logging, " Name:"+csvTempl.Fullname+"\n")
 
-		if csvTempl.Email != "" && regexp.MustCompile(`^[a-zA-Z0-9@.]+$`).MatchString(csvTempl.Email) && !(regexp.MustCompile(`@hotmail|@gmail|@outlook|@live|@windowslive|@yahoo`).MatchString(csvTempl.Email)) {
+		if csvTempl.Email != "" && regexp.MustCompile(`^[a-zA-Z0-9@. -]+$`).MatchString(csvTempl.Email) && !(regexp.MustCompile(`@hotmail|@gmail|@outlook|@live|@windowslive|@yahoo`).MatchString(csvTempl.Email)) {
 			LogSuccess("(✓)", logging)
 		} else {
 			LogError("(X)", logging)

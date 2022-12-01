@@ -86,6 +86,17 @@ func (organization Organization) createOrganizationInvitation(data interface{}) 
 	github := GitHub{Auth: organization.Auth}
 	_, statusCode, bodyBytes := github.Request("POST", "https://api.github.com/orgs/"+organization.Owner+"/invitations", body)
 
+	if statusCode == 422 {
+		//Validation Failed
+		error := model.Error_github_api{}
+		json.Unmarshal(bodyBytes, &error)
+
+		if error.Errors[0].Code == "unprocessable" && error.Errors[0].Field == "data" && error.Errors[0].Message == "A user with this email addresss is already a part of this org" {
+			color.New(color.FgHiMagenta).Print("A user with this email addresss is already a part of this org ")
+			return nil
+		}
+	}
+
 	if statusCode != 200 && statusCode != 201 {
 		return errors.New(github.GetMessage(bodyBytes))
 	}

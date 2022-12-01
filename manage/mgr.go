@@ -72,11 +72,11 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 	LogCustom(color.Italic, "Validating format "+proj+"csv template \n", logging)
 
 	result := true
-	check := false
+	check_err := false
 	err_result_list := ""
 
 	for _, csvTempl := range csvTemplate {
-		check = false
+		check_err = false
 
 		LogPrint(logging, csvTempl.No+"\n")
 
@@ -85,7 +85,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		} else {
 			LogError("(X)", logging)
 			result = false
-			check = false
+			check_err = true
 		}
 		LogPrint(logging, " Name:"+csvTempl.Fullname+"\n")
 
@@ -94,7 +94,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		} else {
 			LogError("(X)", logging)
 			result = false
-			check = false
+			check_err = true
 		}
 		LogPrint(logging, " Email:"+csvTempl.Email+"\n")
 
@@ -105,7 +105,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 				} else {
 					LogError("(X)", logging)
 					result = false
-					check = false
+					check_err = true
 				}
 			} else {
 				LogWarning("(!)", logging)
@@ -121,7 +121,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 			} else {
 				LogError("(X)", logging)
 				result = false
-				check = false
+				check_err = true
 			}
 		} else {
 			LogDisable("(-)", logging)
@@ -134,10 +134,13 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		} else {
 			LogError("(X)", logging)
 			result = false
-			check = false
+			check_err = true
 		}
 		LogPrint(logging, " GitHub :"+csvTempl.GitHub+"\n")
-		err_result_list += csvTempl.No + " "
+
+		if check_err {
+			err_result_list += csvTempl.No + " "
+		}
 	}
 
 	color.New(color.Italic).Print("Format " + proj + ".csv have been validated : ")
@@ -147,8 +150,8 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 	}
 	color.New(color.FgHiRed).Println("(X)")
 
-	if check == false {
-		color.New(color.FgHiRed).Println("Error in line [ " + err_result_list + "]")
+	if check_err {
+		color.New(color.FgHiRed).Println("Error at line(s) [ " + err_result_list + "]")
 	}
 
 	return false
@@ -210,8 +213,8 @@ func (mgr GitHubManager) RewriteTemplateFormat(teamName string) {
 			dataset = append(dataset, model.ProjectMemberListTemplate{
 				No:                strconv.Itoa(I),
 				Username:          csvTempl.Username,
-				Fullname:          csvTempl.Fullname,
-				Email:             strings.TrimSpace(csvTempl.Email),
+				Fullname:          regexp.MustCompile(`[^a-zA-Z0-9@._ -]+`).ReplaceAllString(csvTempl.Fullname, ""),
+				Email:             regexp.MustCompile(`[^a-zA-Z0-9@._-]+`).ReplaceAllString(csvTempl.Email, ""),
 				Role:              csvTempl.Role,
 				SubscriptionOwner: csvTempl.SubscriptionOwner,
 				GitHubUsername:    csvTempl.GitHubUsername,
@@ -481,6 +484,7 @@ func (mgr GitHubManager) InviteMemberToCorpTeamEmail(teamName string, email stri
 	teamID := mgr.Team.GetInfoTeam(teamName).ID
 
 	if err := mgr.Organization.InviteToCorpTeam(email, role, teamID); err != nil {
+
 		color.New(color.FgHiRed).Println("Error ", err.Error())
 		os.Exit(1)
 	}

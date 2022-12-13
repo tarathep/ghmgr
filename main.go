@@ -32,7 +32,7 @@ type Options struct {
 	Logging  bool   `short:"l" long:"logging" description:"Console log"`
 }
 
-const version string = "v1.7.5"
+const version string = "v1.7.6"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
 `

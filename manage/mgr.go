@@ -149,10 +149,7 @@ func (mgr GitHubManager) CheckTemplateFormat(logging bool, fileName string) bool
 		return true
 	}
 	color.New(color.FgHiRed).Println("(X)")
-
-	if check_err {
-		color.New(color.FgHiRed).Println("Error at line(s) [ " + err_result_list + "]")
-	}
+	color.New(color.FgHiRed).Println("At line(s) [ " + err_result_list + "]")
 
 	return false
 }
@@ -1027,7 +1024,7 @@ func (mgr GitHubManager) RemoveDormantUsersFromCSV(backup bool, filename string)
 
 }
 
-//?
+// ?
 func (mgr GitHubManager) RemoveOrganizationMemberExculdeTeamMembers() {
 	start := time.Now()
 

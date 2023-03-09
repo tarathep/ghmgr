@@ -55,6 +55,7 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
   - Remove Membership of Organization
   - Remove dormant users of the organization from CSV file
   - Remove Membership of Organization without membership of team and verify email
+  - Remove Cache log invited
 - [Import](#import)
   - Import & Invite or Update Team Member from CSV Template
 - [Export](#export)
@@ -357,8 +358,6 @@ To remove a membership between a user and a team (without Organization) focus pu
 ghmgr remove member -t [teamename] -m null
 ```
 
-
-
 ### Remove Membership of Organization 
 
 Removing a user from this list will remove them from all teams and they will no longer have any access to the organization's repositories
@@ -405,6 +404,11 @@ ghmgr remove member dormant --file dormant-users-report-xxxx.csv --backup
 
 the backup file output into report/output/dormant-users-report-xxxxxx.csv-review-xxxx.csv
 
+### Remove member invited log for support re-invite into Org
+
+```bash
+ghmgr remove member invited --t [name] -m example@domain.com,example2@domain.com,example3domain.com
+```
 
 
 ## Import

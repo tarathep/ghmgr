@@ -32,7 +32,7 @@ type Options struct {
 	Logging  bool   `short:"l" long:"logging" description:"Console log"`
 }
 
-const version string = "v1.7.6"
+const version string = "v1.8.6"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
 `
@@ -151,6 +151,7 @@ func main() {
 						return
 					}
 				}
+
 			}
 		case "export":
 			{
@@ -243,8 +244,11 @@ func main() {
 				if len(os.Args) > 2 && os.Args[2] == "member" {
 					if len(os.Args) > 3 && os.Args[3] == "invited" {
 						if options.Team != "" && options.Email != "" {
-							gitHubMgr.RemoveMemberCachedInvited(options.Team, options.Email)
+							gitHubMgr.RemoveMemberCachedInviteds(options.Team, options.Email)
+							fmt.Println("hello1")
+							return
 						}
+						fmt.Println("hello")
 					}
 
 					if options.Username != "" && options.ORG {

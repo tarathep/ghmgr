@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/tarathep/ghmgr/csv"
@@ -87,6 +88,12 @@ func isMemberInPendingCached(email string, cache_pendings []model.CachePending) 
 	return false
 }
 
+func (mgr GitHubManager) RemoveMemberCachedInviteds(teamName, emails string) {
+	for _, email := range strings.Split(emails, ",") {
+		mgr.RemoveMemberCachedInvited(teamName, email)
+	}
+}
+
 func (mgr GitHubManager) RemoveMemberCachedInvited(teamName string, email string) {
 	csvFileName := "./cache/invited/" + teamName + ".csv"
 
@@ -107,5 +114,6 @@ func (mgr GitHubManager) RemoveMemberCachedInvited(teamName string, email string
 			new_cache_pendings = append(new_cache_pendings, cache_pending)
 		}
 	}
+
 	csv.Pending{}.WriteCache("./cache/invited/"+teamName+".csv", new_cache_pendings)
 }

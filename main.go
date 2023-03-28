@@ -30,9 +30,10 @@ type Options struct {
 	Backup   bool   `short:"b" long:"backup" description:"Backup file or Report"`
 	Helps    bool   `long:"help" description:"help"`
 	Logging  bool   `short:"l" long:"logging" description:"Console log"`
+	Option   string `long:"option" description:"Console log show"`
 }
 
-const version string = "v1.8.6"
+const version string = "v1.9.6"
 const label string = `GHMGR GitHub Manager ` + version + `
 Repository : https://github.com/tarathep/ghmgr
 `
@@ -77,18 +78,35 @@ func main() {
 		team := github.Team{Auth: auth, Owner: auth.Owner}
 		organization := github.Organization{Auth: auth, Owner: auth.Owner}
 		user := github.User{Auth: auth}
-
-		gitHubMgr := manage.GitHubManager{Version: version, Organization: organization, Team: team, User: user}
+		repo := github.Repos{Auth: auth, Owner: auth.Owner}
+		//initialze
+		gitHubMgr := manage.GitHubManager{Version: version, Organization: organization, Team: team, User: user, Repos: repo}
 
 		switch os.Args[1] {
 
+		//for test
+		case "git":
+			{
+				if len(os.Args) > 2 && os.Args[2] == "checkout" {
+					gitHubMgr.Repos.Checkout(string(os.Args[3]))
+					return
+				}
+				if len(os.Args) > 2 && os.Args[2] == "sparse-checkout" {
+					gitHubMgr.Repos.SparseCheckout(string(os.Args[3]), options.File)
+					return
+				}
+
+			}
 		case "list":
 			{
+				if len(os.Args) > 2 && os.Args[2] == "repos" {
+					gitHubMgr.ShowReposByTeam(options.Team, options.Option)
+				}
 				if len(os.Args) > 2 && os.Args[2] == "team" {
 					if options.Username != "" {
 						gitHubMgr.MembershipOfTeams(options.Username)
 					} else {
-						gitHubMgr.ListTeam()
+						gitHubMgr.ListTeam(options.Option)
 					}
 
 				} else if len(os.Args) > 2 && os.Args[2] == "member" {

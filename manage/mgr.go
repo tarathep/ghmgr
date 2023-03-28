@@ -21,6 +21,7 @@ type GitHubManager struct {
 	github.Team
 	github.Organization
 	github.User
+	github.Repos
 	Version string
 }
 
@@ -58,6 +59,26 @@ func LogCustom(style color.Attribute, raw interface{}, enable bool) {
 func LogPrint(enable bool, a interface{}) {
 	if enable {
 		fmt.Print(a)
+	}
+}
+
+func (mgr GitHubManager) ShowReposByTeam(teamName string, option string) {
+	if option == "" {
+		color.New(color.Italic).Print("Lists all repos by team in an organization that are visible to the authenticated user.\n")
+		color.New(color.FgHiMagenta).Println("No.", "\tRepo URL")
+	}
+	repos := mgr.Repos.GetReposByTeam(teamName)
+
+	for i, repo := range repos {
+		if option == "csv" {
+			if i+1 == (len(repos)) {
+				fmt.Print("https://github.com/" + mgr.Repos.Owner + "/" + repo)
+			} else {
+				fmt.Print("https://github.com/" + mgr.Repos.Owner + "/" + repo + ",")
+			}
+		} else {
+			fmt.Println((i + 1), "\thttps://github.com/"+mgr.Repos.Owner+"/"+repo)
+		}
 	}
 }
 
@@ -275,10 +296,12 @@ func (mgr GitHubManager) CheckTeamMembershipForUser(teamName string, username st
 }
 
 // List teams https://docs.github.com/en/rest/reference/teams#list-teams
-func (mgr GitHubManager) ListTeam() {
-	color.New(color.Italic).Print("Lists all teams in an organization that are visible to the authenticated user.\n")
+func (mgr GitHubManager) ListTeam(option string) {
+	if option == "" {
+		color.New(color.Italic).Print("Lists all teams in an organization that are visible to the authenticated user.\n")
 
-	color.New(color.FgHiMagenta).Println("No.", "\tID", "\t\tTeam Name")
+		color.New(color.FgHiMagenta).Println("No.", "\tID", "\t\tTeam Name")
+	}
 
 	err, teams := mgr.Team.ListTeams()
 	if err != nil {
@@ -287,7 +310,17 @@ func (mgr GitHubManager) ListTeam() {
 	}
 
 	for i, team := range teams {
-		fmt.Println(i+1, "\t"+strconv.Itoa(team.ID), "\t"+team.Slug)
+		if option == "csv" {
+			if (i + 1) == len(teams) {
+				fmt.Print(team.Slug)
+			} else {
+				fmt.Print(team.Slug + ",")
+			}
+
+		} else {
+			fmt.Println(i+1, "\t"+strconv.Itoa(team.ID), "\t"+team.Slug)
+		}
+
 	}
 }
 

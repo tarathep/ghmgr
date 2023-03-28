@@ -1,9 +1,5 @@
 # GHMGR : GitHub Manager
 
-
-
-
-
 <div align="center"><img src="./Octocat.png" width="50%"></div>
 
 CLI Application for Support GitHub Enterprise/Organize management GitHub APIs tools
@@ -21,9 +17,9 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
 ![](./program.png)
 
 ***Update***
-- add logging for validation csv template for debug when syntax error
-- fix csv support symbol dash "-" at field full-name
-- fix regex compile error on validation
+- Add feaute list repository by team
+- Add support option to support format on console log
+- POC execute command
 
 ***Features***
 
@@ -44,6 +40,7 @@ CLI Application for Support GitHub Enterprise/Organize management GitHub APIs to
   - List member of Organization
   - List member of Organization Show Email , Teams
   - List Dormant users of the organization from CSV file
+  - List Repositories By Team
 - [Invite](#invite)
   - Invite member single command
   - Cancel Organization Invitation
@@ -128,8 +125,6 @@ for the improve performance and query must init before use in the first time
 ghmgr load cache 
 ```
 
-
-
 ## List
 
 ### List Team in Organization
@@ -137,8 +132,25 @@ ghmgr load cache
 Lists all teams in an organization that are visible to the authenticated user.
 https://docs.github.com/en/rest/reference/teams#list-teams
 
+**option**
+
+```--option ``` *csv* to show on console log support
+
 ```bash
- ghmgr list team
+ ghmgr list team --option [option]
+```
+
+### List Repositories in Team
+
+Lists all repositories by team in an organization that are visible to the authenticated user.
+
+**option**
+
+```--option``` *csv* to show on console log support
+```--team``` team name that is match slug team on GitHub
+
+```bash
+ ghmgr list repos --team [teamname] --option [option]
 ```
 
 ### List Membership of Teams
@@ -211,8 +223,6 @@ ghmgr list member --team [teamname] --email show
 ghmgr list member --team [teamname] --exclude [teamname]
 ```
 
-
-
 ### List member in CSV file
 
 for the files workspace in : ```report/input/teamname.csv```
@@ -264,8 +274,6 @@ for the file workspace in : ```report/input/dormant-users-report-xxxxxx.csv```
 ```bash
 ghmgr list member dormant --file dormant-users-report-xxxxxx.csv
 ```
-
-
 
 ## Invite
 

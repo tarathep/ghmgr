@@ -72,12 +72,12 @@ func (mgr GitHubManager) ShowReposByTeam(teamName string, option string) {
 	for i, repo := range repos {
 		if option == "csv" {
 			if i+1 == (len(repos)) {
-				fmt.Print("https://github.com/" + mgr.Repos.Owner + "/" + repo)
+				fmt.Print("https://github.com/" + mgr.Repos.Owner + "/" + repo.Name)
 			} else {
-				fmt.Print("https://github.com/" + mgr.Repos.Owner + "/" + repo + ",")
+				fmt.Print("https://github.com/" + mgr.Repos.Owner + "/" + repo.Name + ",")
 			}
 		} else {
-			fmt.Println((i + 1), "\thttps://github.com/"+mgr.Repos.Owner+"/"+repo)
+			fmt.Println((i + 1), "\thttps://github.com/"+mgr.Repos.Owner+"/"+repo.Name)
 		}
 	}
 }
@@ -1327,4 +1327,46 @@ func (mgr GitHubManager) ExportORGMemberWithOutMembershipOfTeamReport() {
 	color.New(color.FgHiGreen).Print("Done\n")
 
 	fmt.Println("\n----------------------------\nTime used is ", time.Since(start))
+}
+
+func (mgr GitHubManager) RemovingRepositoryTeam(team, repoName, option string) {
+	rmRepo := func(r, t string) {
+		color.New(color.FgHiRed).Print("Removing " + r + " : ")
+
+		result := true
+
+		err, result := mgr.Repos.RemovingRepositoryTeam(t, r)
+
+		if result {
+			color.New(color.FgHiGreen).Print("Done\n")
+			return
+		}
+		if err != nil {
+			color.New(color.FgRed).Println(err.Error())
+			os.Exit(1)
+		}
+		if !result {
+			color.New(color.FgYellow).Println("Not Found")
+			return
+		}
+	}
+
+	color.New(color.Italic).Print("Remove any repositories from the team (" + team + ").")
+
+	if option == "all" {
+		// find all repos from team
+		for i, r := range mgr.Repos.GetReposByTeam(team) {
+
+			// fillter role equal = "role"
+			// if r.RoleName == "read" {
+			fmt.Print("\n", (i + 1))
+			fmt.Print(r.RoleName)
+			rmRepo(r.Name, team)
+			// }
+		}
+	} else {
+		fmt.Print("\n")
+		rmRepo(repoName, team)
+	}
+
 }

@@ -308,6 +308,22 @@ func main() {
 						}
 					}
 				}
+				if len(os.Args) > 2 && os.Args[2] == "team" {
+					if len(os.Args) > 3 && os.Args[3] == "repos" {
+						//Remove repos team (permission only!)
+						if options.Team != "" && options.Option == "all" {
+							//go run main.go remove team repos -t ibm --option all
+							gitHubMgr.RemovingRepositoryTeam(options.Team, options.Name, options.Option)
+							return
+						}
+						//Remove repo team (permission only!)
+						if options.Team != "" && options.Name != "" {
+							//go run main.go remove team repos -t ibm --option all
+							gitHubMgr.RemovingRepositoryTeam(options.Team, options.Name, options.Option)
+							return
+						}
+					}
+				}
 			}
 		case "login":
 			{
